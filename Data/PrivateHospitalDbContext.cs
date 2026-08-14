@@ -23,6 +23,7 @@ namespace PrivateHospitalSystem.Data
         public DbSet<Prescription> Prescriptions { get; set; }
         public DbSet<ProcedurePrice> ProcedurePrices { get; set; }
         public DbSet<MedicalExam> MedicalExams { get; set; }
+        public DbSet<Invoice> Invoices { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -32,7 +33,11 @@ namespace PrivateHospitalSystem.Data
 
             modelBuilder.Entity<ProcedurePrice>()
                 .Property(p => p.Price)
-                .HasPrecision(10, 2); 
+                .HasPrecision(10, 2);
+
+            modelBuilder.Entity<Invoice>().Property(i => i.TotalAmount).HasPrecision(10, 2);
+            modelBuilder.Entity<Invoice>().Property(i => i.InsuranceCoveredAmount).HasPrecision(10, 2);
+            modelBuilder.Entity<Invoice>().Property(i => i.PatientAmount).HasPrecision(10, 2);
         }
     }
 }
