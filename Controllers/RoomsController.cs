@@ -6,23 +6,23 @@ namespace PrivateHospitalSystem.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class InsuranceCoveragesController : ControllerBase
+    public class RoomsController : ControllerBase
     {
-        private readonly IInsuranceCoverageService _service;
+        private readonly IRoomService _service;
 
-        public InsuranceCoveragesController(IInsuranceCoverageService service)
+        public RoomsController(IRoomService service)
         {
             _service = service;
         }
 
         [HttpGet]
-        public async Task<ActionResult<List<InsuranceCoverageResponseDto>>> GetInsuranceCoverages()
+        public async Task<ActionResult<List<RoomResponseDto>>> GetRooms()
         {
             return await _service.GetAllAsync();
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<InsuranceCoverageResponseDto>> GetInsuranceCoverage(Guid id)
+        public async Task<ActionResult<RoomResponseDto>> GetRoom(Guid id)
         {
             var result = await _service.GetByIdAsync(id);
             if (result == null) return NotFound();
@@ -30,14 +30,22 @@ namespace PrivateHospitalSystem.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<InsuranceCoverageResponseDto>> CreateInsuranceCoverage(CreateInsuranceCoverageDto dto)
+        public async Task<ActionResult<RoomResponseDto>> CreateRoom(CreateRoomDto dto)
         {
             var result = await _service.CreateAsync(dto);
-            return CreatedAtAction(nameof(GetInsuranceCoverage), new { id = result.Id }, result);
+            return CreatedAtAction(nameof(GetRoom), new { id = result.Id }, result);
+        }
+
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateRoom(Guid id, CreateRoomDto dto)
+        {
+            var success = await _service.UpdateAsync(id, dto);
+            if (!success) return NotFound();
+            return NoContent();
         }
 
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteInsuranceCoverage(Guid id)
+        public async Task<IActionResult> DeleteRoom(Guid id)
         {
             var success = await _service.DeleteAsync(id);
             if (!success) return NotFound();

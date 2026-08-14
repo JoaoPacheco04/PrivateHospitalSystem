@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using PrivateHospitalSystem.Data;
-using PrivateHospitalSystem.Entities;
+using PrivateHospitalSystem.DTOs;
+using PrivateHospitalSystem.Services;
 
 namespace PrivateHospitalSystem.Controllers
 {
@@ -9,67 +8,47 @@ namespace PrivateHospitalSystem.Controllers
     [Route("api/[controller]")]
     public class PatientsController : ControllerBase
     {
-        private readonly PrivateHospitalDbContext _context;
+        private readonly IPatientService _patientService;
 
-        public PatientsController(PrivateHospitalDbContext context)
+        public PatientsController(IPatientService patientService)
         {
-            _context = context;
+            _patientService = patientService;
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Patient>>> GetPatients()
+        public async Task<ActionResult<List<PatientResponseDto>>> GetPatients()
         {
-            return await _context.Patients.ToListAsync();
+            return await _patientService.GetAllAsync();
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<Patient>> GetPatient(Guid id)
+        public async Task<ActionResult<PatientResponseDto>> GetPatient(Guid id)
         {
-            var patient = await _context.Patients
-                .Include(p => p.InsuranceProvider)
-                .FirstOrDefaultAsync(p => p.Id == id);
-
-            if (patient == null)
-                return NotFound();
-
-            return patient;
+            var result = await _patientService.GetByIdAsync(id);
+            if (result == null) return NotFound();
+            return result;
         }
 
         [HttpPost]
-        public async Task<ActionResult<Patient>> CreatePatient(Patient patient)
+        public async Task<ActionResult<PatientResponseDto>> CreatePatient(CreatePatientDto dto)
         {
-            patient.Id = Guid.NewGuid();
-
-            var count = await _context.Patients.CountAsync();
-            patient.PatientNumber = $"P-{(count + 1):D5}"; // ex: P-00001, P-00002...
-
-            _context.Patients.Add(patient);
-            await _context.SaveChangesAsync();
-
-            return CreatedAtAction(nameof(GetPatient), new { id = patient.Id }, patient);
+            var result = await _patientService.CreateAsync(dto);
+            return CreatedAtAction(nameof(GetPatient), new { id = result.Id }, result);
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdatePatient(Guid id, Patient patient)
+        public async Task<IActionResult> UpdatePatient(Guid id, CreatePatientDto dto)
         {
-            if (id != patient.Id)
-                return BadRequest();
-
-            _context.Entry(patient).State = EntityState.Modified;
-            await _context.SaveChangesAsync();
-
+            var success = await _patientService.UpdateAsync(id, dto);
+            if (!success) return NotFound();
             return NoContent();
         }
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeletePatient(Guid id)
         {
-            var patient = await _context.Patients.FindAsync(id);
-            if (patient == null) return NotFound();
-
-            _context.Patients.Remove(patient);
-            await _context.SaveChangesAsync();
-
+            var success = await _patientService.DeleteAsync(id);
+            if (!success) return NotFound();
             return NoContent();
         }
     }

@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using PrivateHospitalSystem.Data;
+using PrivateHospitalSystem.Services;
 using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -12,6 +13,17 @@ builder.Services.AddControllers()
     {
         options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
     });
+
+builder.Services.AddScoped<IAppointmentService, AppointmentService>();
+builder.Services.AddScoped<IPatientService, PatientService>();
+builder.Services.AddScoped<IInsuranceProviderService, InsuranceProviderService>();
+builder.Services.AddScoped<IInsuranceCoverageService, InsuranceCoverageService>();
+builder.Services.AddScoped<IDoctorService, DoctorService>();
+builder.Services.AddScoped<ISpecialtyService, SpecialtyService>();
+builder.Services.AddScoped<IDoctorSpecialtyService, DoctorSpecialtyService>();
+builder.Services.AddScoped<IBedService, BedService>();
+builder.Services.AddScoped<IAdmissionService, AdmissionService>();
+builder.Services.AddScoped<IRoomService, RoomService>();
 
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();

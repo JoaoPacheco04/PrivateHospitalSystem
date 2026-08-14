@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using PrivateHospitalSystem.Data;
-using PrivateHospitalSystem.Entities;
+using PrivateHospitalSystem.DTOs;
+using PrivateHospitalSystem.Services;
 
 namespace PrivateHospitalSystem.Controllers
 {
@@ -9,58 +8,32 @@ namespace PrivateHospitalSystem.Controllers
     [Route("api/[controller]")]
     public class AdmissionsController : ControllerBase
     {
-        private readonly PrivateHospitalDbContext _context;
+        private readonly IAdmissionService _service;
 
-        public AdmissionsController(PrivateHospitalDbContext context)
+        public AdmissionsController(IAdmissionService service)
         {
-            _context = context;
-        }
-
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<Admission>>> GetAdmissions()
-        {
-            return await _context.Admissions.ToListAsync();
+            _service = service;
         }
 
         [HttpGet("active")]
-        public async Task<ActionResult<IEnumerable<Admission>>> GetActiveAdmissions()
+        public async Task<ActionResult<List<AdmissionResponseDto>>> GetActiveAdmissions()
         {
-            return await _context.Admissions
-                .Include(a => a.Patient)
-                .Include(a => a.Bed)
-                .Where(a => a.DischargedAt == null)
-                .ToListAsync();
+            return await _service.GetActiveAsync();
         }
 
         [HttpPost]
-        public async Task<ActionResult<Admission>> CreateAdmission(Admission admission)
+        public async Task<ActionResult<AdmissionResponseDto>> CreateAdmission(CreateAdmissionDto dto)
         {
-            var bed = await _context.Beds.FindAsync(admission.BedId);
-            if (bed == null || bed.Status != BedStatus.Available)
-                return BadRequest("Bed is not available.");
-
-            admission.Id = Guid.NewGuid();
-            admission.AdmittedAt = DateTime.UtcNow;
-            bed.Status = BedStatus.Occupied;
-
-            _context.Admissions.Add(admission);
-            await _context.SaveChangesAsync();
-
-            return CreatedAtAction(nameof(GetAdmissions), admission);
+            var (result, error) = await _service.CreateAsync(dto);
+            if (error != null) return BadRequest(error);
+            return Ok(result);
         }
 
         [HttpPatch("{id}/discharge")]
         public async Task<IActionResult> DischargePatient(Guid id)
         {
-            var admission = await _context.Admissions.FindAsync(id);
-            if (admission == null) return NotFound();
-
-            admission.DischargedAt = DateTime.UtcNow;
-
-            var bed = await _context.Beds.FindAsync(admission.BedId);
-            if (bed != null) bed.Status = BedStatus.Available;
-
-            await _context.SaveChangesAsync();
+            var success = await _service.DischargeAsync(id);
+            if (!success) return NotFound();
             return NoContent();
         }
     }

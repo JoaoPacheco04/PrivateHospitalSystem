@@ -1,0 +1,108 @@
+﻿using Microsoft.EntityFrameworkCore;
+using PrivateHospitalSystem.Data;
+using PrivateHospitalSystem.DTOs;
+using PrivateHospitalSystem.Entities;
+
+namespace PrivateHospitalSystem.Services
+{
+    public class AppointmentService : IAppointmentService
+    {
+        private readonly PrivateHospitalDbContext _context;
+
+        public AppointmentService(PrivateHospitalDbContext context)
+        {
+            _context = context;
+        }
+
+        public async Task<List<AppointmentResponseDto>> GetAllAsync()
+        {
+            return await _context.Appointments
+                .Include(a => a.Patient)
+                .Include(a => a.Doctor)
+                .Include(a => a.Room)
+                .Select(a => ToDto(a))
+                .ToListAsync();
+        }
+
+        public async Task<AppointmentResponseDto?> GetByIdAsync(Guid id)
+        {
+            var appointment = await _context.Appointments
+                .Include(a => a.Patient)
+                .Include(a => a.Doctor)
+                .Include(a => a.Room)
+                .FirstOrDefaultAsync(a => a.Id == id);
+
+            return appointment == null ? null : ToDto(appointment);
+        }
+
+        public async Task<(AppointmentResponseDto? Result, string? Error)> CreateAsync(CreateAppointmentDto dto)
+        {
+            var endTime = dto.ScheduledAt.AddMinutes(dto.DurationMinutes);
+
+            bool doctorBusy = await _context.Appointments.AnyAsync(a =>
+                a.DoctorId == dto.DoctorId &&
+                a.Status != AppointmentStatus.Cancelled &&
+                a.ScheduledAt < endTime &&
+                a.ScheduledAt.AddMinutes(a.DurationMinutes) > dto.ScheduledAt);
+
+            if (doctorBusy)
+                return (null, "Doctor already has an appointment in this time slot.");
+
+            bool roomBusy = await _context.Appointments.AnyAsync(a =>
+                a.RoomId == dto.RoomId &&
+                a.Status != AppointmentStatus.Cancelled &&
+                a.ScheduledAt < endTime &&
+                a.ScheduledAt.AddMinutes(a.DurationMinutes) > dto.ScheduledAt);
+
+            if (roomBusy)
+                return (null, "Room already booked in this time slot.");
+
+            var appointment = new Appointment
+            {
+                Id = Guid.NewGuid(),
+                PatientId = dto.PatientId,
+                DoctorId = dto.DoctorId,
+                RoomId = dto.RoomId,
+                ScheduledAt = dto.ScheduledAt,
+                DurationMinutes = dto.DurationMinutes,
+                Notes = dto.Notes,
+                Status = AppointmentStatus.Scheduled
+            };
+
+            _context.Appointments.Add(appointment);
+            await _context.SaveChangesAsync();
+
+            // recarrega com as relações para devolver o DTO completo
+            var created = await GetByIdAsync(appointment.Id);
+            return (created, null);
+        }
+
+        public async Task<bool> CancelAsync(Guid id)
+        {
+            var appointment = await _context.Appointments.FindAsync(id);
+            if (appointment == null) return false;
+
+            appointment.Status = AppointmentStatus.Cancelled;
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
+        private static AppointmentResponseDto ToDto(Appointment a)
+        {
+            return new AppointmentResponseDto
+            {
+                Id = a.Id,
+                PatientId = a.PatientId,
+                PatientName = a.Patient?.FullName ?? string.Empty,
+                DoctorId = a.DoctorId,
+                DoctorName = a.Doctor?.FullName ?? string.Empty,
+                RoomId = a.RoomId,
+                RoomNumber = a.Room?.RoomNumber ?? string.Empty,
+                ScheduledAt = a.ScheduledAt,
+                DurationMinutes = a.DurationMinutes,
+                Status = a.Status.ToString(),
+                Notes = a.Notes
+            };
+        }
+    }
+}

@@ -1,0 +1,8 @@
+﻿namespace PrivateHospitalSystem.DTOs
+{
+    public class SpecialtyResponseDto
+    {
+        public Guid Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+    }
+}

@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using PrivateHospitalSystem.Data;
-using PrivateHospitalSystem.Entities;
+using PrivateHospitalSystem.DTOs;
+using PrivateHospitalSystem.Services;
 
 namespace PrivateHospitalSystem.Controllers
 {
@@ -9,65 +8,47 @@ namespace PrivateHospitalSystem.Controllers
     [Route("api/[controller]")]
     public class DoctorsController : ControllerBase
     {
-        private readonly PrivateHospitalDbContext _context;
+        private readonly IDoctorService _service;
 
-        public DoctorsController(PrivateHospitalDbContext context)
+        public DoctorsController(IDoctorService service)
         {
-            _context = context;
+            _service = service;
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Doctor>>> GetDoctors()
+        public async Task<ActionResult<List<DoctorResponseDto>>> GetDoctors()
         {
-            return await _context.Doctors.ToListAsync();
+            return await _service.GetAllAsync();
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<Doctor>> GetDoctor(Guid id)
+        public async Task<ActionResult<DoctorResponseDto>> GetDoctor(Guid id)
         {
-            var doctor = await _context.Doctors
-                .Include(d => d.Specialties)
-                    .ThenInclude(ds => ds.Specialty)
-                .FirstOrDefaultAsync(d => d.Id == id);
-
-            if (doctor == null)
-                return NotFound();
-
-            return doctor;
+            var result = await _service.GetByIdAsync(id);
+            if (result == null) return NotFound();
+            return result;
         }
 
         [HttpPost]
-        public async Task<ActionResult<Doctor>> CreateDoctor(Doctor doctor)
+        public async Task<ActionResult<DoctorResponseDto>> CreateDoctor(CreateDoctorDto dto)
         {
-            doctor.Id = Guid.NewGuid();
-            _context.Doctors.Add(doctor);
-            await _context.SaveChangesAsync();
-
-            return CreatedAtAction(nameof(GetDoctor), new { id = doctor.Id }, doctor);
+            var result = await _service.CreateAsync(dto);
+            return CreatedAtAction(nameof(GetDoctor), new { id = result.Id }, result);
         }
 
-
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateDoctor(Guid id, Doctor doctor)
+        public async Task<IActionResult> UpdateDoctor(Guid id, CreateDoctorDto dto)
         {
-            if (id != doctor.Id)
-                return BadRequest();
-
-            _context.Entry(doctor).State = EntityState.Modified;
-            await _context.SaveChangesAsync();
-
+            var success = await _service.UpdateAsync(id, dto);
+            if (!success) return NotFound();
             return NoContent();
         }
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteDoctor(Guid id)
         {
-            var doctor = await _context.Doctors.FindAsync(id);
-            if (doctor == null) return NotFound();
-
-            _context.Doctors.Remove(doctor);
-            await _context.SaveChangesAsync();
-
+            var success = await _service.DeleteAsync(id);
+            if (!success) return NotFound();
             return NoContent();
         }
     }

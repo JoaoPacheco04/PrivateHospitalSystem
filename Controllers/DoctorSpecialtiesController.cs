@@ -1,45 +1,32 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using PrivateHospitalSystem.Data;
-using PrivateHospitalSystem.Entities;
+using PrivateHospitalSystem.DTOs;
+using PrivateHospitalSystem.Services;
+
 namespace PrivateHospitalSystem.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
     public class DoctorSpecialtiesController : ControllerBase
     {
-        private readonly PrivateHospitalDbContext _context;
+        private readonly IDoctorSpecialtyService _service;
 
-        public DoctorSpecialtiesController(PrivateHospitalDbContext context)
+        public DoctorSpecialtiesController(IDoctorSpecialtyService service)
         {
-            _context = context;
-        }
-
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<DoctorSpecialty>>> GetDoctorSpecialties()
-        {
-            return await _context.DoctorSpecialties.ToListAsync();
+            _service = service;
         }
 
         [HttpPost]
-        public async Task<ActionResult<DoctorSpecialty>> CreateDoctorSpecialty(DoctorSpecialty doctorSpecialty)
+        public async Task<ActionResult> CreateDoctorSpecialty(CreateDoctorSpecialtyDto dto)
         {
-            doctorSpecialty.Id = Guid.NewGuid();
-            _context.DoctorSpecialties.Add(doctorSpecialty);
-            await _context.SaveChangesAsync();
-
-            return CreatedAtAction(nameof(GetDoctorSpecialties), doctorSpecialty);
+            var id = await _service.CreateAsync(dto.DoctorId, dto.SpecialtyId);
+            return Ok(new { id });
         }
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteDoctorSpecialty(Guid id)
         {
-            var doctorSpecialty = await _context.DoctorSpecialties.FindAsync(id);
-            if (doctorSpecialty == null) return NotFound();
-
-            _context.DoctorSpecialties.Remove(doctorSpecialty);
-            await _context.SaveChangesAsync();
-
+            var success = await _service.DeleteAsync(id);
+            if (!success) return NotFound();
             return NoContent();
         }
     }

@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using PrivateHospitalSystem.Data;
-using PrivateHospitalSystem.Entities;
+using PrivateHospitalSystem.DTOs;
+using PrivateHospitalSystem.Services;
 
 namespace PrivateHospitalSystem.Controllers
 {
@@ -9,62 +8,47 @@ namespace PrivateHospitalSystem.Controllers
     [Route("api/[controller]")]
     public class InsuranceProvidersController : ControllerBase
     {
-            private readonly PrivateHospitalDbContext _context;
-        public InsuranceProvidersController (PrivateHospitalDbContext context)
+        private readonly IInsuranceProviderService _service;
+
+        public InsuranceProvidersController(IInsuranceProviderService service)
         {
-            _context = context;
+            _service = service;
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<InsuranceProvider>>> GetInsuranceProviders()
+        public async Task<ActionResult<List<InsuranceProviderResponseDto>>> GetInsuranceProviders()
         {
-            return await _context.InsuranceProviders.ToListAsync();
+            return await _service.GetAllAsync();
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<InsuranceProvider>> GetInsuranceProvider(Guid id)
+        public async Task<ActionResult<InsuranceProviderResponseDto>> GetInsuranceProvider(Guid id)
         {
-            var provider = await _context.InsuranceProviders
-                .Include(p => p.Coverages)
-                .FirstOrDefaultAsync(p => p.Id == id);
-
-            if (provider == null)
-                return NotFound();
-
-            return provider;
+            var result = await _service.GetByIdAsync(id);
+            if (result == null) return NotFound();
+            return result;
         }
 
         [HttpPost]
-        public async Task<ActionResult<InsuranceProvider>> CreateInsuranceProvider(InsuranceProvider provider)
+        public async Task<ActionResult<InsuranceProviderResponseDto>> CreateInsuranceProvider(CreateInsuranceProviderDto dto)
         {
-            provider.Id = Guid.NewGuid();
-            _context.InsuranceProviders.Add(provider);
-            await _context.SaveChangesAsync();
-
-            return CreatedAtAction(nameof(GetInsuranceProvider), new { id = provider.Id }, provider);
+            var result = await _service.CreateAsync(dto);
+            return CreatedAtAction(nameof(GetInsuranceProvider), new { id = result.Id }, result);
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateInsuranceProvider(Guid id, InsuranceProvider provider)
+        public async Task<IActionResult> UpdateInsuranceProvider(Guid id, CreateInsuranceProviderDto dto)
         {
-            if (id != provider.Id)
-                return BadRequest();
-
-            _context.Entry(provider).State = EntityState.Modified;
-            await _context.SaveChangesAsync();
-
+            var success = await _service.UpdateAsync(id, dto);
+            if (!success) return NotFound();
             return NoContent();
         }
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteInsuranceProvider(Guid id)
         {
-            var provider = await _context.InsuranceProviders.FindAsync(id);
-            if (provider == null) return NotFound();
-
-            _context.InsuranceProviders.Remove(provider);
-            await _context.SaveChangesAsync();
-
+            var success = await _service.DeleteAsync(id);
+            if (!success) return NotFound();
             return NoContent();
         }
     }

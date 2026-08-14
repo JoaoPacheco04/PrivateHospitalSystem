@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using PrivateHospitalSystem.Data;
-using PrivateHospitalSystem.Entities;
+using PrivateHospitalSystem.DTOs;
+using PrivateHospitalSystem.Services;
 
 namespace PrivateHospitalSystem.Controllers
 {
@@ -9,27 +8,24 @@ namespace PrivateHospitalSystem.Controllers
     [Route("api/[controller]")]
     public class SpecialtiesController : ControllerBase
     {
-        private readonly PrivateHospitalDbContext _context;
+        private readonly ISpecialtyService _service;
 
-        public SpecialtiesController(PrivateHospitalDbContext context)
+        public SpecialtiesController(ISpecialtyService service)
         {
-            _context = context;
+            _service = service;
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Specialty>>> GetSpecialties()
+        public async Task<ActionResult<List<SpecialtyResponseDto>>> GetSpecialties()
         {
-            return await _context.Specialties.ToListAsync();
+            return await _service.GetAllAsync();
         }
 
         [HttpPost]
-        public async Task<ActionResult<Specialty>> CreateSpecialty(Specialty specialty)
+        public async Task<ActionResult<SpecialtyResponseDto>> CreateSpecialty(CreateSpecialtyDto dto)
         {
-            specialty.Id = Guid.NewGuid();
-            _context.Specialties.Add(specialty);
-            await _context.SaveChangesAsync();
-
-            return CreatedAtAction(nameof(GetSpecialties), specialty);
+            var result = await _service.CreateAsync(dto);
+            return Ok(result);
         }
     }
 }
