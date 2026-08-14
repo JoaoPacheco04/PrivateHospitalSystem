@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using PrivateHospitalSystem.Data;
 
@@ -11,9 +12,11 @@ using PrivateHospitalSystem.Data;
 namespace PrivateHospitalSystem.Migrations
 {
     [DbContext(typeof(PrivateHospitalDbContext))]
-    partial class PrivateHospitalDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260814143546_AddBedsAndAdmissions")]
+    partial class AddBedsAndAdmissions
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -47,64 +50,6 @@ namespace PrivateHospitalSystem.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("InsuranceProviders");
-                });
-
-            modelBuilder.Entity("PrivateHospitalSystem.Entities.Admission", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime>("AdmittedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<Guid>("BedId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime?>("DischargedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<Guid>("PatientId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("Reason")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("BedId");
-
-                    b.HasIndex("PatientId");
-
-                    b.ToTable("Admissions");
-                });
-
-            modelBuilder.Entity("PrivateHospitalSystem.Entities.Bed", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("BedNumber")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Department")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("Status")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Beds");
                 });
 
             modelBuilder.Entity("PrivateHospitalSystem.Entities.Doctor", b =>
@@ -263,25 +208,6 @@ namespace PrivateHospitalSystem.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Specialties");
-                });
-
-            modelBuilder.Entity("PrivateHospitalSystem.Entities.Admission", b =>
-                {
-                    b.HasOne("PrivateHospitalSystem.Entities.Bed", "Bed")
-                        .WithMany()
-                        .HasForeignKey("BedId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("PrivateHospitalSystem.Entities.Patient", "Patient")
-                        .WithMany()
-                        .HasForeignKey("PatientId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Bed");
-
-                    b.Navigation("Patient");
                 });
 
             modelBuilder.Entity("PrivateHospitalSystem.Entities.DoctorSpecialty", b =>

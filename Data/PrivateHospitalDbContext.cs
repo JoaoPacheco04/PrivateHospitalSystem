@@ -16,6 +16,8 @@ namespace PrivateHospitalSystem.Data
         public DbSet<Doctor> Doctors { get; set; }
         public DbSet<Specialty> Specialties { get; set; }
         public DbSet<DoctorSpecialty> DoctorSpecialties { get; set; }
+        public DbSet<Bed> Beds { get; set; }
+        public DbSet<Admission> Admissions { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
