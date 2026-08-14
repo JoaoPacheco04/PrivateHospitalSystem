@@ -18,8 +18,10 @@ namespace PrivateHospitalSystem.Data
         public DbSet<DoctorSpecialty> DoctorSpecialties { get; set; }
         public DbSet<Bed> Beds { get; set; }
         public DbSet<Admission> Admissions { get; set; }
-        public DbSet<Room> Rooms { get; set;  }
+        public DbSet<Room> Rooms { get; set; }
         public DbSet<Appointment> Appointments { get; set; }
+        public DbSet<Prescription> Prescriptions { get; set; }
+        public DbSet<MedicalExam> MedicalExams { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

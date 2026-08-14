@@ -3,7 +3,7 @@
     public class Patient
     {
         public Guid Id { get; set; }
-        public string PatientNumber { get; set; } = string.Empty; // ex: "P-00001"
+        public string PatientNumber { get; set; } = string.Empty;
         public string FullName { get; set; } = string.Empty;
 
         public DateTime DateOfBirth { get; set; }
@@ -13,7 +13,7 @@
         public string Address { get; set; } = string.Empty;
 
         public string? NIF { get; set; }
-        public string? HealthNumber { get; set; } // Número de Utente
+        public string? HealthNumber { get; set; } 
 
         public string? EmergencyContactName { get; set; }
         public string? EmergencyContactPhone { get; set; }

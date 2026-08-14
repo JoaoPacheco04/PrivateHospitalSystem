@@ -24,6 +24,9 @@ builder.Services.AddScoped<IDoctorSpecialtyService, DoctorSpecialtyService>();
 builder.Services.AddScoped<IBedService, BedService>();
 builder.Services.AddScoped<IAdmissionService, AdmissionService>();
 builder.Services.AddScoped<IRoomService, RoomService>();
+builder.Services.AddScoped<IPrescriptionService, PrescriptionService>();
+builder.Services.AddScoped<IMedicalExamService, MedicalExamService>();
+
 
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
