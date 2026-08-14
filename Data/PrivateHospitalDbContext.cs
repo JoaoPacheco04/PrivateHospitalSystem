@@ -21,6 +21,7 @@ namespace PrivateHospitalSystem.Data
         public DbSet<Room> Rooms { get; set; }
         public DbSet<Appointment> Appointments { get; set; }
         public DbSet<Prescription> Prescriptions { get; set; }
+        public DbSet<ProcedurePrice> ProcedurePrices { get; set; }
         public DbSet<MedicalExam> MedicalExams { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -28,6 +29,10 @@ namespace PrivateHospitalSystem.Data
             modelBuilder.Entity<InsuranceCoverage>()
                 .Property(c => c.CoveragePercentage)
                 .HasPrecision(5, 2);
+
+            modelBuilder.Entity<ProcedurePrice>()
+                .Property(p => p.Price)
+                .HasPrecision(10, 2); 
         }
     }
 }

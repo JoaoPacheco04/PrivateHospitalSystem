@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using PrivateHospitalSystem.Data;
 
@@ -11,9 +12,11 @@ using PrivateHospitalSystem.Data;
 namespace PrivateHospitalSystem.Migrations
 {
     [DbContext(typeof(PrivateHospitalDbContext))]
-    partial class PrivateHospitalDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260814181152_AddProcedurePricesTable")]
+    partial class AddProcedurePricesTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
