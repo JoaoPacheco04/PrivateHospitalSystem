@@ -8,10 +8,12 @@ namespace PrivateHospitalSystem.Services
     public class PatientService : IPatientService
     {
         private readonly PrivateHospitalDbContext _context;
+        private readonly IAuditLogService _auditLogService;
 
-        public PatientService(PrivateHospitalDbContext context)
+        public PatientService(PrivateHospitalDbContext context, IAuditLogService auditLogService)
         {
             _context = context;
+            _auditLogService = auditLogService;
         }
 
         public async Task<List<PatientResponseDto>> GetAllAsync()
@@ -20,6 +22,28 @@ namespace PrivateHospitalSystem.Services
                 .Include(p => p.InsuranceProvider)
                 .Select(p => ToDto(p))
                 .ToListAsync();
+        }
+
+        public async Task<PagedResultDto<PatientResponseDto>> GetPagedAsync(int page, int pageSize)
+        {
+            var query = _context.Patients.Include(p => p.InsuranceProvider);
+
+            var totalCount = await query.CountAsync();
+
+            var items = await query
+                .OrderBy(p => p.FullName)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .Select(p => ToDto(p))
+                .ToListAsync();
+
+            return new PagedResultDto<PatientResponseDto>
+            {
+                Items = items,
+                TotalCount = totalCount,
+                Page = page,
+                PageSize = pageSize
+            };
         }
 
         public async Task<PatientResponseDto?> GetByIdAsync(Guid id)
@@ -57,6 +81,8 @@ namespace PrivateHospitalSystem.Services
 
             _context.Patients.Add(patient);
             await _context.SaveChangesAsync();
+
+            await _auditLogService.LogAsync("PatientCreated", "Patient", patient.Id, null, null, $"Created patient {patient.FullName}");
 
             var created = await GetByIdAsync(patient.Id);
             return created!;
@@ -118,28 +144,6 @@ namespace PrivateHospitalSystem.Services
                 InsuranceProviderName = p.InsuranceProvider?.Name,
                 PolicyNumber = p.PolicyNumber,
                 CreatedAt = p.CreatedAt
-            };
-        }
-
-        public async Task<PagedResultDto<PatientResponseDto>> GetPagedAsync(int page, int pageSize)
-        {
-            var query = _context.Patients.Include(p => p.InsuranceProvider);
-
-            var totalCount = await query.CountAsync();
-
-            var items = await query
-                .OrderBy(p => p.FullName)
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
-                .Select(p => ToDto(p))
-                .ToListAsync();
-
-            return new PagedResultDto<PatientResponseDto>
-            {
-                Items = items,
-                TotalCount = totalCount,
-                Page = page,
-                PageSize = pageSize
             };
         }
     }

@@ -33,6 +33,8 @@ namespace PrivateHospitalSystem.Data
         public DbSet<Referral> Referrals { get; set; }
         public DbSet<DischargeSummary> DischargeSummaries { get; set; }
         public DbSet<InformedConsent> InformedConsents { get; set; }
+        public DbSet<AuditLog> AuditLogs { get; set; }
+        public DbSet<Notification> Notifications { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
