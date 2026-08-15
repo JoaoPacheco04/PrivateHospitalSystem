@@ -37,11 +37,11 @@ namespace PrivateHospitalSystem.Controllers
             if (!success) return NotFound();
             return NoContent();
         }
-
         [HttpPatch("{id}/complete")]
-        public async Task<IActionResult> Complete(Guid id)
+        public async Task<IActionResult> Complete(Guid id, CompleteEmergencyCaseDto dto)
         {
-            var success = await _service.CompleteAsync(id);
+            var (success, error) = await _service.CompleteAsync(id, dto);
+            if (error != null) return BadRequest(error);
             if (!success) return NotFound();
             return NoContent();
         }

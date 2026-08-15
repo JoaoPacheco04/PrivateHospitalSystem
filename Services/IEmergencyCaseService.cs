@@ -7,6 +7,6 @@ namespace PrivateHospitalSystem.Services
         Task<List<EmergencyCaseResponseDto>> GetQueueAsync();
         Task<EmergencyCaseResponseDto> CreateAsync(CreateEmergencyCaseDto dto);
         Task<bool> StartAsync(Guid id, Guid doctorId);
-        Task<bool> CompleteAsync(Guid id);
+        Task<(bool Success, string? Error)> CompleteAsync(Guid id, CompleteEmergencyCaseDto dto);
     }
 }

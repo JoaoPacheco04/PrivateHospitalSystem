@@ -8,10 +8,12 @@ namespace PrivateHospitalSystem.Services
     public class EmergencyCaseService : IEmergencyCaseService
     {
         private readonly PrivateHospitalDbContext _context;
+        private readonly IAdmissionService _admissionService;
 
-        public EmergencyCaseService(PrivateHospitalDbContext context)
+        public EmergencyCaseService(PrivateHospitalDbContext context, IAdmissionService admissionService)
         {
             _context = context;
+            _admissionService = admissionService;
         }
 
         public async Task<List<EmergencyCaseResponseDto>> GetQueueAsync()
@@ -20,8 +22,8 @@ namespace PrivateHospitalSystem.Services
                 .Include(e => e.Patient)
                 .Include(e => e.Doctor)
                 .Where(e => e.Status != EmergencyStatus.Completed)
-                .OrderByDescending(e => e.Priority) 
-                .ThenBy(e => e.ArrivedAt) 
+                .OrderByDescending(e => e.Priority)
+                .ThenBy(e => e.ArrivedAt)
                 .Select(e => ToDto(e))
                 .ToListAsync();
         }
@@ -61,16 +63,32 @@ namespace PrivateHospitalSystem.Services
             return true;
         }
 
-        public async Task<bool> CompleteAsync(Guid id)
+        public async Task<(bool Success, string? Error)> CompleteAsync(Guid id, CompleteEmergencyCaseDto dto)
         {
             var emergencyCase = await _context.EmergencyCases.FindAsync(id);
-            if (emergencyCase == null) return false;
+            if (emergencyCase == null) return (false, "Emergency case not found.");
+
+            if (dto.RequiresAdmission)
+            {
+                if (dto.BedId == null)
+                    return (false, "BedId is required when admission is needed.");
+
+                var (admissionResult, admissionError) = await _admissionService.CreateAsync(new CreateAdmissionDto
+                {
+                    PatientId = emergencyCase.PatientId,
+                    BedId = dto.BedId.Value,
+                    Reason = dto.AdmissionReason ?? $"Admitted from emergency: {emergencyCase.Complaint}"
+                });
+
+                if (admissionError != null)
+                    return (false, admissionError);
+            }
 
             emergencyCase.Status = EmergencyStatus.Completed;
             emergencyCase.CompletedAt = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
-            return true;
+            return (true, null);
         }
 
         private static EmergencyCaseResponseDto ToDto(EmergencyCase e)
