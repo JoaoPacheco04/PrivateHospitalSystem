@@ -28,6 +28,8 @@ namespace PrivateHospitalSystem.Data
         public DbSet<Invoice> Invoices { get; set; }
         public DbSet<Medication> Medications { get; set; }
         public DbSet<EmergencyCase> EmergencyCases { get; set; }
+        public DbSet<Surgery> Surgeries { get; set; }
+        public DbSet<SurgeryTeamMember> SurgeryTeamMembers { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
