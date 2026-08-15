@@ -68,7 +68,7 @@ builder.Services.AddScoped<IDashboardService, DashboardService>();
 builder.Services.AddScoped<IMedicationService, MedicationService>();
 builder.Services.AddScoped<IEmergencyCaseService, EmergencyCaseService>();
 builder.Services.AddScoped<ISurgeryService, SurgeryService>();
-
+builder.Services.AddScoped<IReferralService, ReferralService>();
 
 builder.Services.AddOpenApi();
 

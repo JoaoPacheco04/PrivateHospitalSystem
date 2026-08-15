@@ -30,6 +30,7 @@ namespace PrivateHospitalSystem.Data
         public DbSet<EmergencyCase> EmergencyCases { get; set; }
         public DbSet<Surgery> Surgeries { get; set; }
         public DbSet<SurgeryTeamMember> SurgeryTeamMembers { get; set; }
+        public DbSet<Referral> Referrals { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -46,6 +47,18 @@ namespace PrivateHospitalSystem.Data
             modelBuilder.Entity<Invoice>().Property(i => i.TotalAmount).HasPrecision(10, 2);
             modelBuilder.Entity<Invoice>().Property(i => i.InsuranceCoveredAmount).HasPrecision(10, 2);
             modelBuilder.Entity<Invoice>().Property(i => i.PatientAmount).HasPrecision(10, 2);
+
+            modelBuilder.Entity<Referral>()
+                .HasOne(r => r.ReferringDoctor)
+                .WithMany()
+                .HasForeignKey(r => r.ReferringDoctorId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            modelBuilder.Entity<Referral>()
+                .HasOne(r => r.ReferredToDoctor)
+                .WithMany()
+                .HasForeignKey(r => r.ReferredToDoctorId)
+                .OnDelete(DeleteBehavior.NoAction);
         }
     }
 }
