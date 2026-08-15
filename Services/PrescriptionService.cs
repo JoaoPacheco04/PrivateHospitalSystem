@@ -9,11 +9,13 @@ namespace PrivateHospitalSystem.Services
     {
         private readonly PrivateHospitalDbContext _context;
         private readonly IInvoiceService _invoiceService;
+        private readonly INotificationService _notificationService;
 
-        public PrescriptionService(PrivateHospitalDbContext context, IInvoiceService invoiceService)
+        public PrescriptionService(PrivateHospitalDbContext context, IInvoiceService invoiceService, INotificationService notificationService)
         {
             _context = context;
             _invoiceService = invoiceService;
+            _notificationService = notificationService;
         }
 
         public async Task<List<PrescriptionResponseDto>> GetByPatientAsync(Guid patientId)
@@ -37,6 +39,14 @@ namespace PrivateHospitalSystem.Services
                     return (null, $"No stock available for {dto.MedicationName}.");
 
                 medication.StockQuantity -= 1;
+
+                if (medication.StockQuantity <= medication.MinimumStockAlert)
+                {
+                    await _notificationService.CreateAsync(new CreateNotificationDto
+                    {
+                        Message = $"Low stock alert: {medication.Name} has only {medication.StockQuantity} units left (minimum: {medication.MinimumStockAlert})."
+                    });
+                }
             }
 
             var prescription = new Prescription
@@ -64,6 +74,18 @@ namespace PrivateHospitalSystem.Services
                 PatientId = dto.PatientId,
                 ProcedureType = dto.MedicationName
             });
+
+            try
+            {
+                await _notificationService.CreateAsync(new CreateNotificationDto
+                {
+                    Message = $"A new prescription was created for {created.Patient?.FullName ?? string.Empty}: {created.MedicationName}."
+                });
+            }
+            catch
+            {
+                // Swallow notification errors so prescription creation still succeeds
+            }
 
             return (ToDto(created), null);
         }

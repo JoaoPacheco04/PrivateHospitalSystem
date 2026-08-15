@@ -32,6 +32,15 @@ namespace PrivateHospitalSystem.Services
                 .ToListAsync();
         }
 
+        public async Task<List<NotificationResponseDto>> GetAdminNotificationsAsync()
+        {
+            return await _context.Notifications
+                .Where(n => n.PatientId == null && n.DoctorId == null)
+                .OrderByDescending(n => n.CreatedAt)
+                .Select(n => ToDto(n))
+                .ToListAsync();
+        }
+
         public async Task<NotificationResponseDto> CreateAsync(CreateNotificationDto dto)
         {
             var notification = new Notification
