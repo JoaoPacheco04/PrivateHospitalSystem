@@ -31,6 +31,7 @@ namespace PrivateHospitalSystem.Data
         public DbSet<Surgery> Surgeries { get; set; }
         public DbSet<SurgeryTeamMember> SurgeryTeamMembers { get; set; }
         public DbSet<Referral> Referrals { get; set; }
+        public DbSet<DischargeSummary> DischargeSummaries { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
