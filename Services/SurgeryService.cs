@@ -8,10 +8,12 @@ namespace PrivateHospitalSystem.Services
     public class SurgeryService : ISurgeryService
     {
         private readonly PrivateHospitalDbContext _context;
+        private readonly IInvoiceService _invoiceService;
 
-        public SurgeryService(PrivateHospitalDbContext context)
+        public SurgeryService(PrivateHospitalDbContext context, IInvoiceService invoiceService)
         {
             _context = context;
+            _invoiceService = invoiceService;
         }
 
         public async Task<List<SurgeryResponseDto>> GetAllAsync()
@@ -62,6 +64,13 @@ namespace PrivateHospitalSystem.Services
 
             _context.Surgeries.Add(surgery);
             await _context.SaveChangesAsync();
+
+            // Gera fatura automaticamente, se houver preço configurado para este procedimento
+            await _invoiceService.CreateAsync(new CreateInvoiceDto
+            {
+                PatientId = dto.PatientId,
+                ProcedureType = dto.ProcedureName
+            });
 
             var created = await GetByIdAsync(surgery.Id);
             return (created, null);
