@@ -32,6 +32,7 @@ namespace PrivateHospitalSystem.Data
         public DbSet<SurgeryTeamMember> SurgeryTeamMembers { get; set; }
         public DbSet<Referral> Referrals { get; set; }
         public DbSet<DischargeSummary> DischargeSummaries { get; set; }
+        public DbSet<InformedConsent> InformedConsents { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -59,6 +60,24 @@ namespace PrivateHospitalSystem.Data
                 .HasOne(r => r.ReferredToDoctor)
                 .WithMany()
                 .HasForeignKey(r => r.ReferredToDoctorId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            modelBuilder.Entity<InformedConsent>()
+    .HasOne(c => c.Patient)
+    .WithMany()
+    .HasForeignKey(c => c.PatientId)
+    .OnDelete(DeleteBehavior.NoAction);
+
+            modelBuilder.Entity<InformedConsent>()
+                .HasOne(c => c.WitnessedByDoctor)
+                .WithMany()
+                .HasForeignKey(c => c.WitnessedByDoctorId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            modelBuilder.Entity<InformedConsent>()
+                .HasOne(c => c.Surgery)
+                .WithMany()
+                .HasForeignKey(c => c.SurgeryId)
                 .OnDelete(DeleteBehavior.NoAction);
         }
     }
