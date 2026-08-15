@@ -39,7 +39,8 @@ public class PrescriptionsController : ControllerBase
         [Authorize(Roles = "Admin,Doctor")]
         public async Task<ActionResult<PrescriptionResponseDto>> CreatePrescription(CreatePrescriptionDto dto)
         {
-            var result = await _service.CreateAsync(dto);
+            var (result, error) = await _service.CreateAsync(dto);
+            if (error != null) return BadRequest(error);
             return Ok(result);
         }
     }

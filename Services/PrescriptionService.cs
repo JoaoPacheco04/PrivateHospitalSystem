@@ -24,8 +24,20 @@ namespace PrivateHospitalSystem.Services
                 .ToListAsync();
         }
 
-        public async Task<PrescriptionResponseDto> CreateAsync(CreatePrescriptionDto dto)
+        public async Task<(PrescriptionResponseDto? Result, string? Error)> CreateAsync(CreatePrescriptionDto dto)
         {
+            var medication = await _context.Medications
+                .FirstOrDefaultAsync(m => m.Name == dto.MedicationName);
+
+            if (medication != null)
+            {
+                if (medication.StockQuantity <= 0)
+                    return (null, $"No stock available for {dto.MedicationName}.");
+
+                medication.StockQuantity -= 1;
+            }
+        
+
             var prescription = new Prescription
             {
                 Id = Guid.NewGuid(),
@@ -46,7 +58,7 @@ namespace PrivateHospitalSystem.Services
                 .Include(p => p.Doctor)
                 .FirstAsync(p => p.Id == prescription.Id);
 
-            return ToDto(created);
+            return (ToDto(created), null);
         }
 
         private static PrescriptionResponseDto ToDto(Prescription p)

@@ -26,10 +26,11 @@ namespace PrivateHospitalSystem.Data
         public DbSet<MedicalExam> MedicalExams { get; set; }
         public DbSet<ProcedurePrice> ProcedurePrices { get; set; }
         public DbSet<Invoice> Invoices { get; set; }
+        public DbSet<Medication> Medications { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            base.OnModelCreating(modelBuilder); 
+            base.OnModelCreating(modelBuilder);
 
             modelBuilder.Entity<InsuranceCoverage>()
                 .Property(c => c.CoveragePercentage)
