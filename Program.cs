@@ -73,6 +73,7 @@ builder.Services.AddScoped<IDischargeSummaryService, DischargeSummaryService>();
 builder.Services.AddScoped<IInformedConsentService, InformedConsentService>();
 builder.Services.AddScoped<IAuditLogService, AuditLogService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
+builder.Services.AddScoped<IPatientFeedbackService, PatientFeedbackService>();
 builder.Services.AddOpenApi();
 
 var app = builder.Build();
