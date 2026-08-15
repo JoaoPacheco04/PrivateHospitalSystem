@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using PrivateHospitalSystem.DTOs;
 using PrivateHospitalSystem.Services;
 
@@ -6,6 +7,7 @@ namespace PrivateHospitalSystem.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class DoctorsController : ControllerBase
     {
         private readonly IDoctorService _service;
@@ -30,6 +32,7 @@ namespace PrivateHospitalSystem.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "Admin")]
         public async Task<ActionResult<DoctorResponseDto>> CreateDoctor(CreateDoctorDto dto)
         {
             var result = await _service.CreateAsync(dto);
@@ -37,6 +40,7 @@ namespace PrivateHospitalSystem.Controllers
         }
 
         [HttpPut("{id}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> UpdateDoctor(Guid id, CreateDoctorDto dto)
         {
             var success = await _service.UpdateAsync(id, dto);
@@ -45,6 +49,7 @@ namespace PrivateHospitalSystem.Controllers
         }
 
         [HttpDelete("{id}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteDoctor(Guid id)
         {
             var success = await _service.DeleteAsync(id);

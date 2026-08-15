@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using PrivateHospitalSystem.DTOs;
 using PrivateHospitalSystem.Services;
 
@@ -22,20 +23,39 @@ namespace PrivateHospitalSystem.Controllers
         }
 
         [HttpGet("{id}")]
+        [Authorize(Roles = "Admin,Staff,Doctor")]
         public async Task<ActionResult<AppointmentResponseDto>> GetAppointment(Guid id)
         {
             var result = await _appointmentService.GetByIdAsync(id);
             if (result == null) return NotFound();
             return result;
         }
-
         [HttpPost]
+        [Authorize(Roles = "Admin,Staff")]
         public async Task<ActionResult<AppointmentResponseDto>> CreateAppointment(CreateAppointmentDto dto)
         {
             var (result, error) = await _appointmentService.CreateAsync(dto);
             if (error != null) return BadRequest(error);
 
             return CreatedAtAction(nameof(GetAppointment), new { id = result!.Id }, result);
+        }
+
+        [HttpPut("{id}")]
+        [Authorize(Roles = "Admin,Staff")]
+        public async Task<IActionResult> UpdateAppointment(Guid id, CreateAppointmentDto dto)
+        {
+            var success = await _appointmentService.UpdateAsync(id, dto);
+            if (!success) return NotFound();
+            return NoContent();
+        }
+
+        [HttpDelete("{id}")]
+        [Authorize(Roles = "Admin,Staff")]
+        public async Task<IActionResult> DeleteAppointment(Guid id)
+        {
+            var success = await _appointmentService.DeleteAsync(id);
+            if (!success) return NotFound();
+            return NoContent();
         }
 
         [HttpPatch("{id}/cancel")]

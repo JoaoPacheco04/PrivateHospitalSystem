@@ -1,12 +1,14 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using PrivateHospitalSystem.DTOs;
 using PrivateHospitalSystem.Services;
 
 namespace PrivateHospitalSystem.Controllers
 {
-    [ApiController]
-    [Route("api/[controller]")]
-    public class RoomsController : ControllerBase
+[ApiController]
+[Route("api/[controller]")]
+[Authorize]
+public class RoomsController : ControllerBase
     {
         private readonly IRoomService _service;
 
@@ -37,6 +39,7 @@ namespace PrivateHospitalSystem.Controllers
         }
 
         [HttpPut("{id}")]
+        [Authorize(Roles = "Admin,Staff")]
         public async Task<IActionResult> UpdateRoom(Guid id, CreateRoomDto dto)
         {
             var success = await _service.UpdateAsync(id, dto);
@@ -45,6 +48,7 @@ namespace PrivateHospitalSystem.Controllers
         }
 
         [HttpDelete("{id}")]
+        [Authorize(Roles = "Admin,Staff")]
         public async Task<IActionResult> DeleteRoom(Guid id)
         {
             var success = await _service.DeleteAsync(id);

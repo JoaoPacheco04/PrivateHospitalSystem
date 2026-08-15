@@ -1,12 +1,14 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using PrivateHospitalSystem.DTOs;
 using PrivateHospitalSystem.Services;
 
 namespace PrivateHospitalSystem.Controllers
 {
-    [ApiController]
-    [Route("api/[controller]")]
-    public class AdmissionsController : ControllerBase
+[ApiController]
+[Route("api/[controller]")]
+[Authorize]
+public class AdmissionsController : ControllerBase
     {
         private readonly IAdmissionService _service;
 

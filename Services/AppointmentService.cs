@@ -87,6 +87,43 @@ namespace PrivateHospitalSystem.Services
             return true;
         }
 
+        public async Task<bool> UpdateAsync(Guid id, CreateAppointmentDto dto)
+        {
+            var appointment = await _context.Appointments.FindAsync(id);
+            if (appointment == null) return false;
+
+            var endTime = dto.ScheduledAt.AddMinutes(dto.DurationMinutes);
+
+            bool doctorBusy = await _context.Appointments.AnyAsync(a =>
+                a.Id != id &&
+                a.DoctorId == dto.DoctorId &&
+                a.Status != AppointmentStatus.Cancelled &&
+                a.ScheduledAt < endTime &&
+                a.ScheduledAt.AddMinutes(a.DurationMinutes) > dto.ScheduledAt);
+
+            if (doctorBusy) return false;
+
+            appointment.PatientId = dto.PatientId;
+            appointment.DoctorId = dto.DoctorId;
+            appointment.RoomId = dto.RoomId;
+            appointment.ScheduledAt = dto.ScheduledAt;
+            appointment.DurationMinutes = dto.DurationMinutes;
+            appointment.Notes = dto.Notes;
+
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<bool> DeleteAsync(Guid id)
+        {
+            var appointment = await _context.Appointments.FindAsync(id);
+            if (appointment == null) return false;
+
+            _context.Appointments.Remove(appointment);
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
         private static AppointmentResponseDto ToDto(Appointment a)
         {
             return new AppointmentResponseDto

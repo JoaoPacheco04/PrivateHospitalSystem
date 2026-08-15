@@ -31,6 +31,7 @@ builder.Services.AddAuthentication(options =>
     .AddJwtBearer(options =>
     {
         options.MapInboundClaims = false;
+        options.IncludeErrorDetails = true; // só para debug - remover em produção
         options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuer = true,

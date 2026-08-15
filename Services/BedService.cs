@@ -59,5 +59,27 @@ namespace PrivateHospitalSystem.Services
                 CreatedAt = b.CreatedAt
             };
         }
+
+        public async Task<bool> UpdateAsync(Guid id, CreateBedDto dto)
+        {
+            var bed = await _context.Beds.FindAsync(id);
+            if (bed == null) return false;
+
+            bed.BedNumber = dto.BedNumber;
+            bed.Department = dto.Department;
+
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<bool> DeleteAsync(Guid id)
+        {
+            var bed = await _context.Beds.FindAsync(id);
+            if (bed == null) return false;
+
+            _context.Beds.Remove(bed);
+            await _context.SaveChangesAsync();
+            return true;
+        }
     }
 }

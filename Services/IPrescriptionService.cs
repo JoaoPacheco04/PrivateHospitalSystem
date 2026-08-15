@@ -1,4 +1,7 @@
-﻿using PrivateHospitalSystem.DTOs;
+﻿using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using PrivateHospitalSystem.DTOs;
 
 namespace PrivateHospitalSystem.Services
 {

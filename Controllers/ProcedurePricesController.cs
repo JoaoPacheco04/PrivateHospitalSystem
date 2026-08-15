@@ -1,12 +1,14 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using PrivateHospitalSystem.DTOs;
 using PrivateHospitalSystem.Services;
 
 namespace PrivateHospitalSystem.Controllers
 {
-    [ApiController]
-    [Route("api/[controller]")]
-    public class ProcedurePricesController : ControllerBase
+[ApiController]
+[Route("api/[controller]")]
+[Authorize]
+public class ProcedurePricesController : ControllerBase
     {
         private readonly IProcedurePriceService _service;
 
@@ -22,6 +24,7 @@ namespace PrivateHospitalSystem.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "Admin")]
         public async Task<ActionResult<ProcedurePriceResponseDto>> Create(CreateProcedurePriceDto dto)
         {
             var result = await _service.CreateAsync(dto);
@@ -29,6 +32,7 @@ namespace PrivateHospitalSystem.Controllers
         }
 
         [HttpPut("{id}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Update(Guid id, CreateProcedurePriceDto dto)
         {
             var success = await _service.UpdateAsync(id, dto);

@@ -1,12 +1,14 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using PrivateHospitalSystem.DTOs;
 using PrivateHospitalSystem.Services;
 
 namespace PrivateHospitalSystem.Controllers
 {
-    [ApiController]
-    [Route("api/[controller]")]
-    public class DoctorSpecialtiesController : ControllerBase
+[ApiController]
+[Route("api/[controller]")]
+[Authorize]
+public class DoctorSpecialtiesController : ControllerBase
     {
         private readonly IDoctorSpecialtyService _service;
 
@@ -23,6 +25,7 @@ namespace PrivateHospitalSystem.Controllers
         }
 
         [HttpDelete("{id}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteDoctorSpecialty(Guid id)
         {
             var success = await _service.DeleteAsync(id);

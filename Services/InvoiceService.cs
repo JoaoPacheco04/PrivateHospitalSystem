@@ -14,6 +14,7 @@ namespace PrivateHospitalSystem.Services
             _context = context;
         }
 
+        // Returns invoices for a specific patient (used by /me endpoint)
         public async Task<List<InvoiceResponseDto>> GetByPatientAsync(Guid patientId)
         {
             return await _context.Invoices

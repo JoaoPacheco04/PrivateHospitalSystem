@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.IdentityModel.Tokens;
 using PrivateHospitalSystem.DTOs;
 using PrivateHospitalSystem.Entities;
@@ -11,7 +12,8 @@ namespace PrivateHospitalSystem.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class AuthController : ControllerBase
+[AllowAnonymous]
+public class AuthController : ControllerBase
     {
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IConfiguration _configuration;
@@ -30,7 +32,8 @@ namespace PrivateHospitalSystem.Controllers
                 UserName = dto.Email,
                 Email = dto.Email,
                 FullName = dto.FullName,
-                Role = dto.Role
+                Role = dto.Role,
+                PatientId = dto.PatientId
             };
 
             var result = await _userManager.CreateAsync(user, dto.Password);
@@ -65,6 +68,12 @@ namespace PrivateHospitalSystem.Controllers
                 new Claim("fullName", user.FullName),
                 new Claim(ClaimTypes.Role, user.Role)
             };
+
+            // Include patientId claim when user is linked to a Patient entity
+            if (user.PatientId.HasValue)
+            {
+                claims.Add(new Claim("patientId", user.PatientId.Value.ToString()));
+            }
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]!));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
