@@ -39,6 +39,11 @@ namespace PrivateHospitalSystem.Services
             if (admission.DischargedAt == null)
                 return (null, "Patient must be discharged before creating a discharge summary.");
 
+            // Prevent duplicate discharge summaries for the same admission
+            var alreadyExists = await _context.DischargeSummaries.AnyAsync(d => d.AdmissionId == dto.AdmissionId);
+            if (alreadyExists)
+                return (null, "A discharge summary already exists for this admission.");
+
             var summary = new DischargeSummary
             {
                 Id = Guid.NewGuid(),

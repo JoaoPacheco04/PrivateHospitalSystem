@@ -59,6 +59,16 @@ namespace PrivateHospitalSystem.Services
             if (roomBusy)
                 return (null, "Room already booked in this time slot.");
 
+            // Also check surgeries to avoid room conflict between appointments and surgeries
+            bool roomBusyWithSurgery = await _context.Surgeries.AnyAsync(s =>
+                s.RoomId == dto.RoomId &&
+                s.Status != SurgeryStatus.Cancelled &&
+                s.ScheduledAt < endTime &&
+                s.ScheduledAt.AddMinutes(s.DurationMinutes) > dto.ScheduledAt);
+
+            if (roomBusyWithSurgery)
+                return (null, "Room already booked for surgery in this time slot.");
+
             var appointment = new Appointment
             {
                 Id = Guid.NewGuid(),
