@@ -1,27 +1,30 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.IdentityModel.Tokens;
+using PrivateHospitalSystem.Data;
 using PrivateHospitalSystem.DTOs;
 using PrivateHospitalSystem.Entities;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Text;
+using Microsoft.EntityFrameworkCore;
 
 namespace PrivateHospitalSystem.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-[AllowAnonymous]
-public class AuthController : ControllerBase
+    public class AuthController : ControllerBase
     {
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IConfiguration _configuration;
+        private readonly PrivateHospitalDbContext _context;
 
-        public AuthController(UserManager<ApplicationUser> userManager, IConfiguration configuration)
+        public AuthController(UserManager<ApplicationUser> userManager, IConfiguration configuration, PrivateHospitalDbContext context)
         {
             _userManager = userManager;
             _configuration = configuration;
+            _context = context;
         }
 
         [HttpPost("register")]
@@ -55,8 +58,65 @@ public class AuthController : ControllerBase
             if (!validPassword)
                 return Unauthorized("Invalid credentials.");
 
-            var token = GenerateJwtToken(user);
-            return Ok(new { token });
+            var accessToken = GenerateJwtToken(user);
+            var refreshToken = await GenerateRefreshTokenAsync(user.Id);
+
+            return Ok(new AuthResponseDto { AccessToken = accessToken, RefreshToken = refreshToken });
+        }
+
+        [HttpPost("refresh")]
+        public async Task<IActionResult> Refresh(RefreshTokenDto dto)
+        {
+            var storedToken = await _context.RefreshTokens
+                .FirstOrDefaultAsync(t => t.Token == dto.RefreshToken);
+
+            if (storedToken == null || storedToken.IsRevoked || storedToken.ExpiresAt < DateTime.UtcNow)
+                return Unauthorized("Invalid or expired refresh token.");
+
+            var user = await _userManager.FindByIdAsync(storedToken.UserId.ToString());
+            if (user == null)
+                return Unauthorized("User not found.");
+
+            storedToken.IsRevoked = true; // rotação: o refresh token só pode ser usado uma vez
+            await _context.SaveChangesAsync();
+
+            var newAccessToken = GenerateJwtToken(user);
+            var newRefreshToken = await GenerateRefreshTokenAsync(user.Id);
+
+            return Ok(new AuthResponseDto { AccessToken = newAccessToken, RefreshToken = newRefreshToken });
+        }
+
+        [HttpPost("revoke")]
+        public async Task<IActionResult> Revoke(RefreshTokenDto dto)
+        {
+            var storedToken = await _context.RefreshTokens
+                .FirstOrDefaultAsync(t => t.Token == dto.RefreshToken);
+
+            if (storedToken == null) return NotFound();
+
+            storedToken.IsRevoked = true;
+            await _context.SaveChangesAsync();
+
+            return NoContent();
+        }
+
+        private async Task<string> GenerateRefreshTokenAsync(Guid userId)
+        {
+            var randomBytes = new byte[64];
+            using var rng = RandomNumberGenerator.Create();
+            rng.GetBytes(randomBytes);
+            var token = Convert.ToBase64String(randomBytes);
+
+            _context.RefreshTokens.Add(new RefreshToken
+            {
+                Id = Guid.NewGuid(),
+                Token = token,
+                UserId = userId,
+                ExpiresAt = DateTime.UtcNow.AddDays(7)
+            });
+
+            await _context.SaveChangesAsync();
+            return token;
         }
 
         private string GenerateJwtToken(ApplicationUser user)
@@ -69,11 +129,8 @@ public class AuthController : ControllerBase
                 new Claim(ClaimTypes.Role, user.Role)
             };
 
-            // Include patientId claim when user is linked to a Patient entity
             if (user.PatientId.HasValue)
-            {
                 claims.Add(new Claim("patientId", user.PatientId.Value.ToString()));
-            }
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]!));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
@@ -82,7 +139,7 @@ public class AuthController : ControllerBase
                 issuer: _configuration["Jwt:Issuer"],
                 audience: _configuration["Jwt:Audience"],
                 claims: claims,
-                expires: DateTime.UtcNow.AddHours(8),
+                expires: DateTime.UtcNow.AddHours(1), // access token mais curto agora, já que há refresh
                 signingCredentials: creds
             );
 
