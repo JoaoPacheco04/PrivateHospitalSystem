@@ -25,7 +25,7 @@ public class MedicalExamsController : ControllerBase
 
         [HttpGet("me")]
         [Authorize(Roles = "Patient")]
-        public async Task<ActionResult<List<MedicalExamResponseDto>>> GetMyMedicalExams()
+        public async Task<ActionResult<List<MedicalExamResponseDto>>> GetMyExams()
         {
             var patientIdClaim = User.FindFirst("patientId")?.Value;
             if (patientIdClaim == null || !Guid.TryParse(patientIdClaim, out var patientId))
