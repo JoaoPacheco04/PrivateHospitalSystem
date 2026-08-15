@@ -23,6 +23,7 @@
         public string Reason { get; set; } = string.Empty;
         public string? Notes { get; set; }
 
+        public bool IsUrgent { get; set; } = false;
         public ReferralStatus Status { get; set; } = ReferralStatus.Pending;
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

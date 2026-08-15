@@ -12,6 +12,8 @@
         public string Reason { get; set; } = string.Empty;
         public string? Notes { get; set; }
         public string Status { get; set; } = string.Empty;
+
+        public bool IsUrgent { get; set; }
         public DateTime CreatedAt { get; set; }
     }
 }

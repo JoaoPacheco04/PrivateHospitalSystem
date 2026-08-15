@@ -9,11 +9,13 @@ namespace PrivateHospitalSystem.Services
     {
         private readonly PrivateHospitalDbContext _context;
         private readonly INotificationService _notificationService;
+        private readonly IEmergencyCaseService _emergencyCaseService;
 
-        public ReferralService(PrivateHospitalDbContext context, INotificationService notificationService)
+        public ReferralService(PrivateHospitalDbContext context, INotificationService notificationService, IEmergencyCaseService emergencyCaseService)
         {
             _context = context;
             _notificationService = notificationService;
+            _emergencyCaseService = emergencyCaseService;
         }
 
         public async Task<List<ReferralResponseDto>> GetByPatientAsync(Guid patientId)
@@ -48,33 +50,34 @@ namespace PrivateHospitalSystem.Services
                 ReferredToDoctorId = dto.ReferredToDoctorId,
                 Reason = dto.Reason,
                 Notes = dto.Notes,
+                IsUrgent = dto.IsUrgent,
                 Status = ReferralStatus.Pending
             };
 
             _context.Referrals.Add(referral);
             await _context.SaveChangesAsync();
+
             var created = await _context.Referrals
                 .Include(r => r.Patient)
                 .Include(r => r.ReferringDoctor)
                 .Include(r => r.ReferredToDoctor)
                 .FirstAsync(r => r.Id == referral.Id);
 
-            // Notify the referred-to doctor about the new referral (if notification service available)
-            if (_notificationService != null)
+            await _notificationService.CreateAsync(new CreateNotificationDto
             {
-                await _notificationService.CreateAsync(new CreateNotificationDto
-                {
-                    DoctorId = referral.ReferredToDoctorId,
-                    Message = $"New referral received for patient {created.Patient?.FullName} — reason: {referral.Reason}"
-                });
-            }
+                DoctorId = referral.ReferredToDoctorId,
+                Message = $"New referral received for patient {created.Patient?.FullName} — reason: {referral.Reason}"
+            });
 
             return ToDto(created);
         }
 
         public async Task<bool> UpdateStatusAsync(Guid id, ReferralStatusUpdateDto dto)
         {
-            var referral = await _context.Referrals.FindAsync(id);
+            var referral = await _context.Referrals
+                .Include(r => r.Patient)
+                .FirstOrDefaultAsync(r => r.Id == id);
+
             if (referral == null) return false;
 
             if (!Enum.TryParse<ReferralStatus>(dto.Status, out var newStatus))
@@ -82,6 +85,17 @@ namespace PrivateHospitalSystem.Services
 
             referral.Status = newStatus;
             await _context.SaveChangesAsync();
+
+            if (newStatus == ReferralStatus.Accepted && referral.IsUrgent)
+            {
+                await _emergencyCaseService.CreateAsync(new CreateEmergencyCaseDto
+                {
+                    PatientId = referral.PatientId,
+                    Complaint = $"Urgent referral: {referral.Reason}",
+                    Priority = 4 // VeryUrgent
+                });
+            }
+
             return true;
         }
 
@@ -98,6 +112,7 @@ namespace PrivateHospitalSystem.Services
                 ReferredToDoctorName = r.ReferredToDoctor?.FullName ?? string.Empty,
                 Reason = r.Reason,
                 Notes = r.Notes,
+                IsUrgent = r.IsUrgent,
                 Status = r.Status.ToString(),
                 CreatedAt = r.CreatedAt
             };
