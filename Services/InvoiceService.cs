@@ -8,13 +8,13 @@ namespace PrivateHospitalSystem.Services
     public class InvoiceService : IInvoiceService
     {
         private readonly PrivateHospitalDbContext _context;
-
-        public InvoiceService(PrivateHospitalDbContext context)
+        private readonly IAuditLogService _auditLogService;
+        public InvoiceService(PrivateHospitalDbContext context, IAuditLogService auditLogService)
         {
             _context = context;
+            _auditLogService = auditLogService;
         }
 
-        // Returns invoices for a specific patient (used by /me endpoint)
         public async Task<List<InvoiceResponseDto>> GetByPatientAsync(Guid patientId)
         {
             return await _context.Invoices
@@ -88,6 +88,9 @@ namespace PrivateHospitalSystem.Services
             invoice.PaidAt = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
+
+            await _auditLogService.LogAsync("InvoicePaid", "Invoice", invoice.Id, null, null, $"Invoice paid: €{invoice.PatientAmount}");
+
             return true;
         }
 

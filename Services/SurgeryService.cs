@@ -65,7 +65,6 @@ namespace PrivateHospitalSystem.Services
             _context.Surgeries.Add(surgery);
             await _context.SaveChangesAsync();
 
-            // Gera fatura automaticamente, se houver preço configurado para este procedimento
             await _invoiceService.CreateAsync(new CreateInvoiceDto
             {
                 PatientId = dto.PatientId,

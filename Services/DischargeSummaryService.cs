@@ -8,10 +8,12 @@ namespace PrivateHospitalSystem.Services
     public class DischargeSummaryService : IDischargeSummaryService
     {
         private readonly PrivateHospitalDbContext _context;
+        private readonly INotificationService _notificationService;
 
-        public DischargeSummaryService(PrivateHospitalDbContext context)
+        public DischargeSummaryService(PrivateHospitalDbContext context, INotificationService notificationService)
         {
             _context = context;
+            _notificationService = notificationService;
         }
 
         public async Task<DischargeSummaryResponseDto?> GetByAdmissionAsync(Guid admissionId)
@@ -55,6 +57,12 @@ namespace PrivateHospitalSystem.Services
                 .Include(d => d.Admission).ThenInclude(a => a!.Patient)
                 .Include(d => d.IssuedByDoctor)
                 .FirstAsync(d => d.Id == summary.Id);
+
+            await _notificationService.CreateAsync(new CreateNotificationDto
+            {
+                PatientId = admission.PatientId,
+                Message = "Thank you for your stay. We'd love to hear your feedback about your experience."
+            });
 
             return (ToDto(created), null);
         }

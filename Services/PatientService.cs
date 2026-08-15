@@ -119,6 +119,9 @@ namespace PrivateHospitalSystem.Services
 
             _context.Patients.Remove(patient);
             await _context.SaveChangesAsync();
+
+            await _auditLogService.LogAsync("PatientDeleted", "Patient", id, null, null, $"Deleted patient {patient.FullName}");
+
             return true;
         }
 

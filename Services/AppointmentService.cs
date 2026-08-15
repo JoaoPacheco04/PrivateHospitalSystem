@@ -8,10 +8,12 @@ namespace PrivateHospitalSystem.Services
     public class AppointmentService : IAppointmentService
     {
         private readonly PrivateHospitalDbContext _context;
+        private readonly IAuditLogService _auditLogService;
 
-        public AppointmentService(PrivateHospitalDbContext context)
+        public AppointmentService(PrivateHospitalDbContext context, IAuditLogService auditLogService)
         {
             _context = context;
+            _auditLogService = auditLogService;
         }
 
         public async Task<List<AppointmentResponseDto>> GetAllAsync()
@@ -72,7 +74,6 @@ namespace PrivateHospitalSystem.Services
             _context.Appointments.Add(appointment);
             await _context.SaveChangesAsync();
 
-            // recarrega com as relações para devolver o DTO completo
             var created = await GetByIdAsync(appointment.Id);
             return (created, null);
         }
@@ -84,6 +85,9 @@ namespace PrivateHospitalSystem.Services
 
             appointment.Status = AppointmentStatus.Cancelled;
             await _context.SaveChangesAsync();
+
+            await _auditLogService.LogAsync("AppointmentCancelled", "Appointment", appointment.Id, null, null, null);
+
             return true;
         }
 
