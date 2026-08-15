@@ -66,6 +66,7 @@ builder.Services.AddScoped<IProcedurePriceService, ProcedurePriceService>();
 builder.Services.AddScoped<IInvoiceService, InvoiceService>();
 builder.Services.AddScoped<IDashboardService, DashboardService>();
 builder.Services.AddScoped<IMedicationService, MedicationService>();
+builder.Services.AddScoped<IEmergencyCaseService, EmergencyCaseService>();
 
 builder.Services.AddOpenApi();
 

@@ -27,6 +27,7 @@ namespace PrivateHospitalSystem.Data
         public DbSet<ProcedurePrice> ProcedurePrices { get; set; }
         public DbSet<Invoice> Invoices { get; set; }
         public DbSet<Medication> Medications { get; set; }
+        public DbSet<EmergencyCase> EmergencyCases { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
