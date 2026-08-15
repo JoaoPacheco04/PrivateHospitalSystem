@@ -23,12 +23,22 @@ namespace PrivateHospitalSystem.Services
                 .ToListAsync();
         }
 
+        public async Task<List<NotificationResponseDto>> GetByDoctorAsync(Guid doctorId)
+        {
+            return await _context.Notifications
+                .Where(n => n.DoctorId == doctorId)
+                .OrderByDescending(n => n.CreatedAt)
+                .Select(n => ToDto(n))
+                .ToListAsync();
+        }
+
         public async Task<NotificationResponseDto> CreateAsync(CreateNotificationDto dto)
         {
             var notification = new Notification
             {
                 Id = Guid.NewGuid(),
                 PatientId = dto.PatientId,
+                DoctorId = dto.DoctorId,
                 Message = dto.Message
             };
 
@@ -54,6 +64,7 @@ namespace PrivateHospitalSystem.Services
             {
                 Id = n.Id,
                 PatientId = n.PatientId,
+                DoctorId = n.DoctorId,
                 Message = n.Message,
                 IsRead = n.IsRead,
                 CreatedAt = n.CreatedAt

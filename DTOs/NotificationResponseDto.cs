@@ -4,6 +4,7 @@
     {
         public Guid Id { get; set; }
         public Guid? PatientId { get; set; }
+        public Guid? DoctorId { get; set; }
         public string Message { get; set; } = string.Empty;
         public bool IsRead { get; set; }
         public DateTime CreatedAt { get; set; }

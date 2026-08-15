@@ -8,10 +8,12 @@ namespace PrivateHospitalSystem.Services
     public class ReferralService : IReferralService
     {
         private readonly PrivateHospitalDbContext _context;
+        private readonly INotificationService _notificationService;
 
-        public ReferralService(PrivateHospitalDbContext context)
+        public ReferralService(PrivateHospitalDbContext context, INotificationService notificationService)
         {
             _context = context;
+            _notificationService = notificationService;
         }
 
         public async Task<List<ReferralResponseDto>> GetByPatientAsync(Guid patientId)
@@ -51,12 +53,21 @@ namespace PrivateHospitalSystem.Services
 
             _context.Referrals.Add(referral);
             await _context.SaveChangesAsync();
-
             var created = await _context.Referrals
                 .Include(r => r.Patient)
                 .Include(r => r.ReferringDoctor)
                 .Include(r => r.ReferredToDoctor)
                 .FirstAsync(r => r.Id == referral.Id);
+
+            // Notify the referred-to doctor about the new referral (if notification service available)
+            if (_notificationService != null)
+            {
+                await _notificationService.CreateAsync(new CreateNotificationDto
+                {
+                    DoctorId = referral.ReferredToDoctorId,
+                    Message = $"New referral received for patient {created.Patient?.FullName} — reason: {referral.Reason}"
+                });
+            }
 
             return ToDto(created);
         }

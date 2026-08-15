@@ -23,6 +23,12 @@ namespace PrivateHospitalSystem.Controllers
             return await _service.GetByPatientAsync(patientId);
         }
 
+        [HttpGet("doctor/{doctorId}")]
+        public async Task<ActionResult<List<NotificationResponseDto>>> GetByDoctor(Guid doctorId)
+        {
+            return await _service.GetByDoctorAsync(doctorId);
+        }
+
         [HttpPost]
         [Authorize(Roles = "Admin,Staff,Doctor")]
         public async Task<ActionResult<NotificationResponseDto>> Create(CreateNotificationDto dto)
