@@ -19,9 +19,14 @@ public class PatientsController : ControllerBase
 
         [HttpGet]
         [Authorize(Roles = "Admin,Staff,Doctor")]
-        public async Task<ActionResult<List<PatientResponseDto>>> GetPatients()
+        public async Task<ActionResult<PagedResultDto<PatientResponseDto>>> GetPatients(
+    [FromQuery] int page = 1,
+    [FromQuery] int pageSize = 20)
         {
-            return await _patientService.GetAllAsync();
+            if (page < 1) page = 1;
+            if (pageSize < 1 || pageSize > 100) pageSize = 20;
+
+            return await _patientService.GetPagedAsync(page, pageSize);
         }
 
         [HttpGet("{id}")]

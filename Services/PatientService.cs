@@ -120,5 +120,27 @@ namespace PrivateHospitalSystem.Services
                 CreatedAt = p.CreatedAt
             };
         }
+
+        public async Task<PagedResultDto<PatientResponseDto>> GetPagedAsync(int page, int pageSize)
+        {
+            var query = _context.Patients.Include(p => p.InsuranceProvider);
+
+            var totalCount = await query.CountAsync();
+
+            var items = await query
+                .OrderBy(p => p.FullName)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .Select(p => ToDto(p))
+                .ToListAsync();
+
+            return new PagedResultDto<PatientResponseDto>
+            {
+                Items = items,
+                TotalCount = totalCount,
+                Page = page,
+                PageSize = pageSize
+            };
+        }
     }
 }

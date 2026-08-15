@@ -9,5 +9,7 @@ namespace PrivateHospitalSystem.Services
         Task<PatientResponseDto> CreateAsync(CreatePatientDto dto);
         Task<bool> UpdateAsync(Guid id, CreatePatientDto dto);
         Task<bool> DeleteAsync(Guid id);
+
+        Task<PagedResultDto<PatientResponseDto>> GetPagedAsync(int page, int pageSize);
     }
 }
