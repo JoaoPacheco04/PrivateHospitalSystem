@@ -8,10 +8,12 @@ namespace PrivateHospitalSystem.Services
     public class PrescriptionService : IPrescriptionService
     {
         private readonly PrivateHospitalDbContext _context;
+        private readonly IInvoiceService _invoiceService;
 
-        public PrescriptionService(PrivateHospitalDbContext context)
+        public PrescriptionService(PrivateHospitalDbContext context, IInvoiceService invoiceService)
         {
             _context = context;
+            _invoiceService = invoiceService;
         }
 
         public async Task<List<PrescriptionResponseDto>> GetByPatientAsync(Guid patientId)
@@ -36,7 +38,6 @@ namespace PrivateHospitalSystem.Services
 
                 medication.StockQuantity -= 1;
             }
-        
 
             var prescription = new Prescription
             {
@@ -57,6 +58,12 @@ namespace PrivateHospitalSystem.Services
                 .Include(p => p.Patient)
                 .Include(p => p.Doctor)
                 .FirstAsync(p => p.Id == prescription.Id);
+
+            await _invoiceService.CreateAsync(new CreateInvoiceDto
+            {
+                PatientId = dto.PatientId,
+                ProcedureType = dto.MedicationName
+            });
 
             return (ToDto(created), null);
         }

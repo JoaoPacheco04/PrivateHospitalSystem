@@ -8,10 +8,12 @@ namespace PrivateHospitalSystem.Services
     public class MedicalExamService : IMedicalExamService
     {
         private readonly PrivateHospitalDbContext _context;
+        private readonly IInvoiceService _invoiceService;
 
-        public MedicalExamService(PrivateHospitalDbContext context)
+        public MedicalExamService(PrivateHospitalDbContext context, IInvoiceService invoiceService)
         {
             _context = context;
+            _invoiceService = invoiceService;
         }
 
         public async Task<List<MedicalExamResponseDto>> GetByPatientAsync(Guid patientId)
@@ -43,6 +45,12 @@ namespace PrivateHospitalSystem.Services
                 .Include(e => e.Patient)
                 .Include(e => e.Doctor)
                 .FirstAsync(e => e.Id == exam.Id);
+
+            await _invoiceService.CreateAsync(new CreateInvoiceDto
+            {
+                PatientId = dto.PatientId,
+                ProcedureType = dto.ExamType
+            });
 
             return ToDto(created);
         }
