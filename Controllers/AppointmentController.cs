@@ -31,9 +31,16 @@ namespace PrivateHospitalSystem.Controllers
             return result;
         }
         [HttpPost]
-        [Authorize(Roles = "Admin,Staff")]
+        [Authorize(Roles = "Admin,Staff,Patient")]
         public async Task<ActionResult<AppointmentResponseDto>> CreateAppointment(CreateAppointmentDto dto)
         {
+            if (User.IsInRole("Patient"))
+            {
+                var patientIdClaim = User.FindFirst("patientId")?.Value;
+                if (patientIdClaim == null || !Guid.TryParse(patientIdClaim, out var patientId) || patientId != dto.PatientId)
+                    return Forbid();
+            }
+
             var (result, error) = await _appointmentService.CreateAsync(dto);
             if (error != null) return BadRequest(error);
 
