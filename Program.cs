@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Hangfire;
+using Hangfire.SqlServer;
 using Microsoft.IdentityModel.Tokens;
 using PrivateHospitalSystem.Data;
 using PrivateHospitalSystem.Entities;
@@ -75,9 +77,29 @@ builder.Services.AddScoped<IAuditLogService, AuditLogService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IPatientFeedbackService, PatientFeedbackService>();
 builder.Services.AddHttpContextAccessor();
+builder.Services.AddHangfire(config => config
+    .UseSqlServerStorage(builder.Configuration.GetConnectionString("DefaultConnection")));
+builder.Services.AddHangfireServer();
+
+// Register recurring job service
+builder.Services.AddScoped<IReminderJobService, ReminderJobService>();
 builder.Services.AddOpenApi();
 
 var app = builder.Build();
+
+// Hangfire dashboard (optional)
+app.UseHangfireDashboard("/hangfire");
+
+// Register recurring jobs
+RecurringJob.AddOrUpdate<IReminderJobService>(
+    "appointment-reminders",
+    service => service.SendAppointmentRemindersAsync(),
+    Cron.Hourly);
+
+RecurringJob.AddOrUpdate<IReminderJobService>(
+    "overdue-invoices",
+    service => service.FlagOverdueInvoicesAsync(),
+    Cron.Daily);
 
 if (app.Environment.IsDevelopment())
 {
