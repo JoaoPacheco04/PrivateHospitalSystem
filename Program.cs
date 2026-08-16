@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Hangfire;
 using Hangfire.SqlServer;
 using System.Threading.RateLimiting;
+using Serilog;
 using Microsoft.IdentityModel.Tokens;
 using PrivateHospitalSystem.Data;
 using PrivateHospitalSystem.Entities;
@@ -13,6 +14,15 @@ using System.Text;
 using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Configure Serilog early
+builder.Host.UseSerilog((context, config) =>
+{
+    config
+        .WriteTo.Console()
+        .WriteTo.File("logs/log-.txt", rollingInterval: RollingInterval.Day)
+        .Enrich.FromLogContext();
+});
 
 builder.Services.AddDbContext<PrivateHospitalDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
@@ -109,6 +119,8 @@ builder.Services.AddRateLimiter(options =>
 builder.Services.AddOpenApi();
 
 var app = builder.Build();
+// Serilog request logging
+app.UseSerilogRequestLogging();
 
 app.UseHangfireDashboard("/hangfire");
 
