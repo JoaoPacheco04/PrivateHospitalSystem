@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Hangfire;
 using Hangfire.SqlServer;
 using System.Threading.RateLimiting;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Serilog;
 using Microsoft.IdentityModel.Tokens;
 using PrivateHospitalSystem.Data;
@@ -23,6 +24,22 @@ builder.Host.UseSerilog((context, config) =>
         .WriteTo.File("logs/log-.txt", rollingInterval: RollingInterval.Day)
         .Enrich.FromLogContext();
 });
+
+// CORS
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend", policy =>
+    {
+        policy.WithOrigins("http://localhost:5173")
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials();
+    });
+});
+
+// Health checks
+builder.Services.AddHealthChecks()
+    .AddDbContextCheck<PrivateHospitalDbContext>();
 
 builder.Services.AddDbContext<PrivateHospitalDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
@@ -142,9 +159,16 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseRateLimiter();
 
+// CORS
+app.UseCors("AllowFrontend");
+
+// Authentication/Authorization
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+// Health check endpoint
+app.MapHealthChecks("/health");
 
 app.Run();
