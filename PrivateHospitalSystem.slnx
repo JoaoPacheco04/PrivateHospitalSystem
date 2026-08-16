@@ -1,3 +1,4 @@
 <Solution>
+  <Project Path="../PrivateHospitalSystem.Tests/PrivateHospitalSystem.Tests.csproj" Id="7579d255-1cd2-40e4-84c9-2e05221adcb5" />
   <Project Path="PrivateHospitalSystem.csproj" />
 </Solution>
