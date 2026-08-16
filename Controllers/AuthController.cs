@@ -141,7 +141,7 @@ namespace PrivateHospitalSystem.Controllers
                 issuer: _configuration["Jwt:Issuer"],
                 audience: _configuration["Jwt:Audience"],
                 claims: claims,
-                expires: DateTime.UtcNow.AddHours(1), // access token mais curto agora, já que há refresh
+                expires: DateTime.UtcNow.AddHours(24), // access token mais curto agora, já que há refresh
                 signingCredentials: creds
             );
 
