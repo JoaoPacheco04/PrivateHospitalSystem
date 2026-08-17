@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PrivateHospitalSystem.DTOs;
 using PrivateHospitalSystem.Services;
@@ -7,7 +7,7 @@ namespace PrivateHospitalSystem.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize(Roles = "Admin,Staff,Doctor")]
+    [Authorize(Roles = "Admin,Staff,Doctor,Patient")]
     public class InformedConsentsController : ControllerBase
     {
         private readonly IInformedConsentService _service;

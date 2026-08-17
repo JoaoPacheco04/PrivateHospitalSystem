@@ -13,6 +13,11 @@ export async function getPatient(id: string): Promise<Patient> {
   return response.data
 }
 
+export async function getMyProfile(): Promise<Patient> {
+  const response = await apiClient.get<Patient>('/Patients/me')
+  return response.data
+}
+
 export async function createPatient(dto: CreatePatientDto): Promise<Patient> {
   const response = await apiClient.post<Patient>('/Patients', dto)
   return response.data

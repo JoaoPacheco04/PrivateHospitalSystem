@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import LoginPage from './pages/LoginPage'
 import DashboardPage from './pages/DashboardPage'
@@ -18,50 +18,98 @@ import ReferralsPage from './pages/ReferralsPage'
 import EmergencyCasesPage from './pages/EmergencyCasesPage'
 import MedicationsPage from './pages/MedicationsPage'
 import ReportsPage from './pages/ReportsPage'
+import MyProfilePage from './pages/MyProfilePage'
+import ForbiddenPage from './pages/ForbiddenPage'
+import AuditLogsPage from './pages/AuditLogsPage'
+import ProcedurePricesPage from './pages/ProcedurePricesPage'
+import ConsentsPage from './pages/ConsentsPage'
+import InsuranceProvidersPage from './pages/InsuranceProvidersPage'
+import WaitingRoomPage from './pages/WaitingRoomPage'
 import Layout from './components/Layout'
 import { useAuthStore } from './store/authStore'
+import { isRouteAllowed, defaultRouteForRole } from './lib/permissions'
+import './App.css'
 
 const queryClient = new QueryClient()
 
-function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const isAuthenticated = useAuthStore((state) => state.isAuthenticated)
+// ─── Auth guard (redirect to login if not authenticated) ──────
+function AuthGuard({ children }: { children: React.ReactNode }) {
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
   return isAuthenticated ? <>{children}</> : <Navigate to="/login" replace />
 }
 
+// ─── Role guard (redirect to /forbidden if role not allowed) ──
+function RoleGuard({ children }: { children: React.ReactNode }) {
+  const role     = useAuthStore((s) => s.role)
+  const location = useLocation()
+  if (!isRouteAllowed(role, location.pathname)) {
+    return <Navigate to="/forbidden" replace />
+  }
+  return <>{children}</>
+}
+
+// ─── Smart default redirect ───────────────────────────────────
+function DefaultRedirect() {
+  const role = useAuthStore((s) => s.role)
+  return <Navigate to={defaultRouteForRole(role)} replace />
+}
+
+// ─── App ──────────────────────────────────────────────────────
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <Routes>
-          <Route path="/login" element={<LoginPage />} />
+          {/* Public & TV Kiosk Screens */}
+          <Route path="/login"        element={<LoginPage />} />
+          <Route path="/forbidden"    element={<ForbiddenPage />} />
+          <Route path="/waiting-room" element={<WaitingRoomPage />} />
+
+          {/* Protected layout */}
           <Route
             element={
-              <ProtectedRoute>
+              <AuthGuard>
                 <Layout />
-              </ProtectedRoute>
+              </AuthGuard>
             }
           >
-            <Route path="/dashboard" element={<DashboardPage />} />
-            <Route path="/patients" element={<PatientsPage />} />
-            <Route path="/patients/new" element={<PatientFormPage />} />
-            <Route path="/patients/:id" element={<PatientFormPage />} />
-            <Route path="/doctors" element={<DoctorsPage />} />
-            <Route path="/doctors/new" element={<DoctorFormPage />} />
-            <Route path="/doctors/:id" element={<DoctorFormPage />} />
-            <Route path="/appointments" element={<AppointmentsPage />} />
-            <Route path="/appointments/new" element={<AppointmentFormPage />} />
-            <Route path="/invoices" element={<InvoicesPage />} />
-            <Route path="/prescriptions" element={<PrescriptionsPage />} />
-            <Route path="/rooms-beds" element={<RoomsBedsPage />} />
-            <Route path="/exams" element={<MedicalExamsPage />} />
-            <Route path="/admissions" element={<AdmissionsPage />} />
-            <Route path="/surgeries" element={<SurgeriesPage />} />
-            <Route path="/referrals" element={<ReferralsPage />} />
-            <Route path="/emergency" element={<EmergencyCasesPage />} />
-            <Route path="/medications" element={<MedicationsPage />} />
-            <Route path="/reports" element={<ReportsPage />} />
+            {/* All protected pages — role-guarded individually */}
+            <Route path="/dashboard"        element={<RoleGuard><DashboardPage /></RoleGuard>} />
+            <Route path="/my-profile"       element={<RoleGuard><MyProfilePage /></RoleGuard>} />
+
+            {/* Patients */}
+            <Route path="/patients"         element={<RoleGuard><PatientsPage /></RoleGuard>} />
+            <Route path="/patients/new"     element={<RoleGuard><PatientFormPage /></RoleGuard>} />
+            <Route path="/patients/:id"     element={<RoleGuard><PatientFormPage /></RoleGuard>} />
+
+            {/* Doctors */}
+            <Route path="/doctors"          element={<RoleGuard><DoctorsPage /></RoleGuard>} />
+            <Route path="/doctors/new"      element={<RoleGuard><DoctorFormPage /></RoleGuard>} />
+            <Route path="/doctors/:id"      element={<RoleGuard><DoctorFormPage /></RoleGuard>} />
+
+            {/* Clinical */}
+            <Route path="/appointments"     element={<RoleGuard><AppointmentsPage /></RoleGuard>} />
+            <Route path="/appointments/new" element={<RoleGuard><AppointmentFormPage /></RoleGuard>} />
+            <Route path="/prescriptions"    element={<RoleGuard><PrescriptionsPage /></RoleGuard>} />
+            <Route path="/exams"            element={<RoleGuard><MedicalExamsPage /></RoleGuard>} />
+            <Route path="/consents"         element={<RoleGuard><ConsentsPage /></RoleGuard>} />
+            <Route path="/admissions"       element={<RoleGuard><AdmissionsPage /></RoleGuard>} />
+            <Route path="/surgeries"        element={<RoleGuard><SurgeriesPage /></RoleGuard>} />
+            <Route path="/referrals"        element={<RoleGuard><ReferralsPage /></RoleGuard>} />
+            <Route path="/emergency"        element={<RoleGuard><EmergencyCasesPage /></RoleGuard>} />
+
+            {/* Facilities & Finance */}
+            <Route path="/rooms-beds"        element={<RoleGuard><RoomsBedsPage /></RoleGuard>} />
+            <Route path="/medications"       element={<RoleGuard><MedicationsPage /></RoleGuard>} />
+            <Route path="/procedure-prices"  element={<RoleGuard><ProcedurePricesPage /></RoleGuard>} />
+            <Route path="/insurance-providers" element={<RoleGuard><InsuranceProvidersPage /></RoleGuard>} />
+            <Route path="/invoices"          element={<RoleGuard><InvoicesPage /></RoleGuard>} />
+            <Route path="/reports"           element={<RoleGuard><ReportsPage /></RoleGuard>} />
+            <Route path="/audit-logs"        element={<RoleGuard><AuditLogsPage /></RoleGuard>} />
           </Route>
-          <Route path="*" element={<Navigate to="/dashboard" replace />} />
+
+          {/* Default redirect — role-aware */}
+          <Route path="*" element={<AuthGuard><DefaultRedirect /></AuthGuard>} />
         </Routes>
       </BrowserRouter>
     </QueryClientProvider>

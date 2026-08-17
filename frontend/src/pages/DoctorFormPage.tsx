@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams, Link } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { createDoctor, updateDoctor, getDoctor } from '../api/doctors'
 import { getSpecialties, addDoctorSpecialty } from '../api/specialties'
@@ -24,6 +24,7 @@ export default function DoctorFormPage() {
   const [currentSpecialties, setCurrentSpecialties] = useState<string[]>([])
   const [selectedSpecialtyId, setSelectedSpecialtyId] = useState('')
   const [specialtyMessage, setSpecialtyMessage] = useState<string | null>(null)
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const { data: allSpecialties } = useQuery({
     queryKey: ['specialties'],
@@ -31,15 +32,18 @@ export default function DoctorFormPage() {
   })
 
   async function loadDoctor() {
-    const doctor = await getDoctor(id!)
-    setForm({
-      fullName: doctor.fullName,
-      licenseNumber: doctor.licenseNumber,
-      phoneNumber: doctor.phoneNumber,
-      email: doctor.email ?? '',
-    })
-    setCurrentSpecialties(doctor.specialties ?? [])
-    setLoading(false)
+    try {
+      const doctor = await getDoctor(id!)
+      setForm({
+        fullName: doctor.fullName,
+        licenseNumber: doctor.licenseNumber,
+        phoneNumber: doctor.phoneNumber,
+        email: doctor.email ?? '',
+      })
+      setCurrentSpecialties(doctor.specialties ?? [])
+    } finally {
+      setLoading(false)
+    }
   }
 
   useEffect(() => {
@@ -55,6 +59,7 @@ export default function DoctorFormPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError(null)
+    setIsSubmitting(true)
     try {
       if (isEditing) {
         await updateDoctor(id!, form)
@@ -64,7 +69,9 @@ export default function DoctorFormPage() {
       queryClient.invalidateQueries({ queryKey: ['doctors'] })
       navigate('/doctors')
     } catch {
-      setError('Failed to save doctor. Check the fields and try again.')
+      setError('Failed to save doctor profile. Please verify license number uniqueness.')
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -73,142 +80,161 @@ export default function DoctorFormPage() {
     setSpecialtyMessage(null)
     try {
       await addDoctorSpecialty(id, selectedSpecialtyId)
-      setSelectedSpecialtyId('')
-      await loadDoctor()
       queryClient.invalidateQueries({ queryKey: ['doctors'] })
+      await loadDoctor()
+      setSelectedSpecialtyId('')
+      setSpecialtyMessage('Specialty added successfully.')
     } catch {
-      setSpecialtyMessage('Failed to add specialty.')
+      setSpecialtyMessage('Failed to attach specialty or doctor already has this specialty.')
     }
   }
 
-  if (loading) return <p className="text-slate-500">Loading...</p>
-
-  const availableToAdd = allSpecialties?.filter((s) => !currentSpecialties.includes(s.name)) ?? []
+  if (loading) {
+    return <div className="p-12 text-center text-slate-400">Loading physician record...</div>
+  }
 
   return (
-    <div className="flex justify-center">
-      <div className="w-full max-w-lg space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-800 mb-6">
-            {isEditing ? 'Edit Doctor' : 'New Doctor'}
-          </h1>
+    <div className="max-w-3xl mx-auto space-y-6">
+      {/* Top Header */}
+      <div>
+        <Link to="/doctors" className="inline-flex items-center gap-1.5 text-xs font-bold text-teal-700 hover:text-teal-900 mb-2">
+          ← Back to Doctors Directory
+        </Link>
+        <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+          {isEditing ? 'Edit Physician Profile' : 'Register New Medical Doctor'}
+        </h1>
+        <p className="text-slate-500 text-sm mt-0.5">
+          {isEditing ? 'Update credentials, contact information and specialties.' : 'Add a licensed physician to the hospital medical staff.'}
+        </p>
+      </div>
 
-          <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-slate-600 mb-1">Full Name *</label>
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Doctor Details Card */}
+        <div className="app-card p-6 sm:p-7 space-y-5">
+          <h2 className="text-base font-bold text-slate-900 pb-3 border-b border-slate-100 flex items-center gap-2">
+            <span>🩺</span> Professional Credentials & Contact
+          </h2>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="sm:col-span-2">
+              <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-2">Full Legal Name *</label>
               <input
                 type="text"
+                placeholder="e.g. Dr. Manuel Ferreira"
                 value={form.fullName}
                 onChange={(e) => handleChange('fullName', e.target.value)}
-                className="w-full border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                className="app-input"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-600 mb-1">License Number *</label>
+              <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-2">Medical License (Ordem dos Médicos) *</label>
               <input
                 type="text"
+                placeholder="e.g. OM-48912"
                 value={form.licenseNumber}
                 onChange={(e) => handleChange('licenseNumber', e.target.value)}
-                className="w-full border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                className="app-input"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-600 mb-1">Phone Number *</label>
+              <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-2">Phone Number *</label>
               <input
                 type="tel"
+                placeholder="+351 912 345 678"
                 value={form.phoneNumber}
                 onChange={(e) => handleChange('phoneNumber', e.target.value)}
-                className="w-full border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                className="app-input"
                 required
               />
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-slate-600 mb-1">Email</label>
+            <div className="sm:col-span-2">
+              <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-2">Hospital Email Address</label>
               <input
                 type="email"
+                placeholder="dr.name@hospital.pt"
                 value={form.email}
                 onChange={(e) => handleChange('email', e.target.value)}
-                className="w-full border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                className="app-input"
               />
             </div>
-
-            {error && (
-              <p className="text-red-600 text-sm bg-red-50 border border-red-200 rounded-lg px-3 py-2">
-                {error}
-              </p>
-            )}
-
-            <div className="flex gap-3 pt-2">
-              <button
-                type="submit"
-                className="bg-teal-600 hover:bg-teal-700 text-white font-semibold rounded-lg px-4 py-2 text-sm transition-colors"
-              >
-                {isEditing ? 'Save Changes' : 'Create Doctor'}
-              </button>
-              <button
-                type="button"
-                onClick={() => navigate('/doctors')}
-                className="bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg px-4 py-2 text-sm transition-colors"
-              >
-                Cancel
-              </button>
-            </div>
-          </form>
+          </div>
         </div>
 
-        {isEditing && (
-          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-            <h2 className="text-lg font-semibold text-slate-800 mb-3">Specialties</h2>
+        {error && (
+          <div className="p-4 bg-rose-50 border border-rose-200 text-rose-700 text-sm font-medium rounded-xl">
+            {error}
+          </div>
+        )}
 
-            <div className="flex flex-wrap gap-2 mb-4">
-              {currentSpecialties.length > 0 ? (
-                currentSpecialties.map((s) => (
-                  <span
-                    key={s}
-                    className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-teal-50 text-teal-700 border border-teal-200"
-                  >
+        <div className="flex items-center justify-end gap-3 pt-2">
+          <Link to="/doctors" className="btn-secondary">
+            Cancel
+          </Link>
+          <button type="submit" disabled={isSubmitting} className="btn-primary">
+            {isSubmitting ? 'Saving...' : isEditing ? 'Update Doctor' : 'Register Doctor'}
+          </button>
+        </div>
+      </form>
+
+      {/* Specialties Management (Only when Editing) */}
+      {isEditing && (
+        <div className="app-card p-6 sm:p-7 space-y-5">
+          <h2 className="text-base font-bold text-slate-900 pb-3 border-b border-slate-100 flex items-center gap-2">
+            <span>🔬</span> Clinical Specialties
+          </h2>
+
+          <div>
+            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Currently Assigned Specialties</p>
+            {currentSpecialties.length > 0 ? (
+              <div className="flex flex-wrap gap-2">
+                {currentSpecialties.map((s) => (
+                  <span key={s} className="px-3 py-1 bg-teal-50 text-teal-800 border border-teal-200 rounded-lg text-xs font-bold">
                     {s}
                   </span>
-                ))
-              ) : (
-                <span className="text-slate-400 text-sm">No specialties assigned yet</span>
-              )}
-            </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-slate-400 italic">No specialties currently assigned to this doctor.</p>
+            )}
+          </div>
 
-            <div className="flex gap-2">
+          <div className="pt-3 border-t border-slate-100">
+            <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-2">Assign New Medical Specialty</label>
+            <div className="flex flex-col sm:flex-row gap-3">
               <select
                 value={selectedSpecialtyId}
                 onChange={(e) => setSelectedSpecialtyId(e.target.value)}
-                className="flex-1 border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+                className="app-select flex-1"
               >
-                <option value="">Select a specialty...</option>
-                {availableToAdd.map((s) => (
-                  <option key={s.id} value={s.id}>
-                    {s.name}
-                  </option>
-                ))}
+                <option value="">Select specialty to add...</option>
+                {allSpecialties
+                  ?.filter((s) => !currentSpecialties.includes(s.name))
+                  .map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.name}
+                    </option>
+                  ))}
               </select>
               <button
                 type="button"
                 onClick={handleAddSpecialty}
                 disabled={!selectedSpecialtyId}
-                className="bg-teal-600 hover:bg-teal-700 disabled:opacity-40 text-white font-medium rounded-lg px-4 py-2 text-sm transition-colors"
+                className="btn-primary"
               >
-                Add
+                Add Specialty
               </button>
             </div>
-
             {specialtyMessage && (
-              <p className="text-red-600 text-sm mt-2">{specialtyMessage}</p>
+              <p className="mt-2 text-xs font-medium text-teal-700">{specialtyMessage}</p>
             )}
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   )
 }
