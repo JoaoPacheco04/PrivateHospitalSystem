@@ -18,7 +18,9 @@ export default function CodeRedAlertBanner() {
 
   if (!isStaffOrDoctor) return null
 
-  const immediateCases = queue?.filter((c) => c.priority === 1 && c.status === 'Waiting') ?? []
+  const immediateCases = queue?.filter(
+    (c) => (c.priority === 'Immediate' || c.priority === '1' || c.priority === 'Red') && c.status === 'Waiting'
+  ) ?? []
   if (immediateCases.length === 0) return null
 
   const activeCase = immediateCases[0]

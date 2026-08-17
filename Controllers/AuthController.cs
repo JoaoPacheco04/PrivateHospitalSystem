@@ -79,7 +79,7 @@ namespace PrivateHospitalSystem.Controllers
             if (user == null)
                 return Unauthorized("User not found.");
 
-            storedToken.IsRevoked = true; // rotação: o refresh token só pode ser usado uma vez
+            storedToken.IsRevoked = true; 
             await _context.SaveChangesAsync();
 
             var newAccessToken = GenerateJwtToken(user);

@@ -108,12 +108,14 @@ export default function MedicalReportPrintModal({
           {/* Allergies & Precautions Alert */}
           <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-900 flex items-center justify-between">
             <span className="font-bold flex items-center gap-2">
-              <span>⚠️ KNOWN ALLERGIES / CONTRAINDICATIONS:</span>
-              <span className="font-extrabold underline">Penicillin, Amoxicillin (Cross-Sensitivity Risk)</span>
+              <span>⚠️ KNOWN ALLERGIES:</span>
+              <span className="font-extrabold">{patient.allergies || 'No known drug allergies recorded'}</span>
             </span>
-            <span className="font-mono text-[10px] font-bold bg-rose-200/60 px-2 py-0.5 rounded text-rose-900">
-              BLOOD GROUP: A+
-            </span>
+            {patient.medicalNotes && (
+              <span className="text-[11px] text-rose-800 italic truncate max-w-xs">
+                Notes: {patient.medicalNotes}
+              </span>
+            )}
           </div>
 
           {/* Active Prescriptions Table */}

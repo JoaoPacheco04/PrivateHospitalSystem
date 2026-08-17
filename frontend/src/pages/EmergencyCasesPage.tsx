@@ -27,10 +27,27 @@ const MANCHESTER_TRIAGE: Record<number, TriageLevel> = {
   5: { label: 'Non-Urgent', colorName: 'Blue', waitTime: '240 min', bg: 'bg-blue-50 dark:bg-blue-950/40', text: 'text-blue-700 dark:text-blue-300', border: 'border-blue-300 dark:border-blue-800', dot: 'bg-blue-600' },
 }
 
+function getManchesterTriage(priority: string | number): TriageLevel {
+  const p = String(priority).toLowerCase()
+  if (p === 'immediate' || p === '5' || p === '1' || p === 'red') {
+    return MANCHESTER_TRIAGE[1]
+  }
+  if (p === 'veryurgent' || p === '4' || p === '2' || p === 'orange') {
+    return MANCHESTER_TRIAGE[2]
+  }
+  if (p === 'urgent' || p === '3' || p === 'yellow') {
+    return MANCHESTER_TRIAGE[3]
+  }
+  if (p === 'standard' || p === '2' || p === '4' || p === 'green') {
+    return MANCHESTER_TRIAGE[4]
+  }
+  return MANCHESTER_TRIAGE[5]
+}
+
 export default function EmergencyCasesPage() {
   const [patientId, setPatientId] = useState('')
   const [complaint, setComplaint] = useState('')
-  const [priority, setPriority] = useState(2)
+  const [priority, setPriority] = useState(4)
   const [error, setError] = useState<string | null>(null)
   const [startDoctorId, setStartDoctorId] = useState<Record<string, string>>({})
   const [admissionBed, setAdmissionBed] = useState<Record<string, string>>({})
@@ -77,14 +94,19 @@ export default function EmergencyCasesPage() {
 
   async function handleComplete(id: string) {
     const bedId = admissionBed[id] || undefined
-    await completeEmergencyCase(id, bedId)
+    await completeEmergencyCase(id, {
+      requiresAdmission: !!bedId,
+      bedId: bedId,
+      admissionReason: bedId ? 'Admitted from Emergency Room' : undefined,
+    })
     queryClient.invalidateQueries({ queryKey: ['emergencyQueue'] })
     queryClient.invalidateQueries({ queryKey: ['beds'] })
+    queryClient.invalidateQueries({ queryKey: ['admissions'] })
     toast.success('Emergency treatment resolved / patient discharged.')
   }
 
-  const redCount = queue?.filter((c) => c.priority === 1).length ?? 0
-  const orangeCount = queue?.filter((c) => c.priority === 2).length ?? 0
+  const redCount = queue?.filter((c) => c.priority === 'Immediate' || c.priority === '5' || c.priority === '1').length ?? 0
+  const orangeCount = queue?.filter((c) => c.priority === 'VeryUrgent' || c.priority === '4' || c.priority === '2').length ?? 0
   const totalQueue = queue?.length ?? 0
 
   return (
@@ -108,7 +130,7 @@ export default function EmergencyCasesPage() {
                 priority: 'Triage Priority',
                 complaint: 'Chief Complaint',
                 status: 'Status',
-                arrivalTime: 'Arrival Time',
+                arrivedAt: 'Arrival Time',
               })
               toast.success('Emergency queue exported to CSV!')
             }}
@@ -271,7 +293,7 @@ export default function EmergencyCasesPage() {
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                 {queue.map((c) => {
-                  const triage = MANCHESTER_TRIAGE[c.priority] || MANCHESTER_TRIAGE[3]
+                  const triage = getManchesterTriage(c.priority)
                   return (
                     <tr key={c.id} className="hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition-colors">
                       <td className="table-cell">
@@ -283,7 +305,6 @@ export default function EmergencyCasesPage() {
 
                       <td className="table-cell">
                         <p className="font-bold text-slate-900 dark:text-white">{c.patientName}</p>
-                        <p className="text-xs text-slate-400 font-mono">Patient #{c.patientNumber}</p>
                       </td>
 
                       <td className="table-cell text-slate-700 dark:text-slate-300 max-w-xs font-medium">
@@ -291,7 +312,7 @@ export default function EmergencyCasesPage() {
                       </td>
 
                       <td className="table-cell text-slate-500 font-mono text-xs">
-                        {new Date(c.arrivalTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        {new Date(c.arrivedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                       </td>
 
                       <td className="table-cell">
@@ -328,7 +349,7 @@ export default function EmergencyCasesPage() {
                             </div>
                           )}
 
-                          {c.status === 'InAttendance' && (
+                          {(c.status === 'InProgress' || c.status === 'InAttendance') && (
                             <div className="inline-flex items-center gap-1.5">
                               <select
                                 value={admissionBed[c.id] ?? ''}

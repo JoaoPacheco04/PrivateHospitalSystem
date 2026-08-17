@@ -69,8 +69,10 @@ export default function MedicalExamsPage() {
       await createMedicalExam({ patientId: activePatientId, doctorId, examType: examType.trim() })
       queryClient.invalidateQueries({ queryKey: ['medicalExams', activePatientId] })
       setExamType('')
+      toast.success('Medical exam ordered successfully!')
     } catch {
       setError('Failed to order medical exam.')
+      toast.error('Failed to order medical exam.')
     } finally {
       setIsSubmitting(false)
     }
@@ -79,9 +81,14 @@ export default function MedicalExamsPage() {
   async function handleComplete(id: string) {
     const result = resultInputs[id]
     if (!result || !result.trim()) return
-    await completeMedicalExam(id, result.trim())
-    queryClient.invalidateQueries({ queryKey: ['medicalExams', activePatientId] })
-    setResultInputs((prev) => ({ ...prev, [id]: '' }))
+    try {
+      await completeMedicalExam(id, result.trim())
+      queryClient.invalidateQueries({ queryKey: ['medicalExams', activePatientId] })
+      setResultInputs((prev) => ({ ...prev, [id]: '' }))
+      toast.success('Exam findings & results recorded!')
+    } catch {
+      toast.error('Failed to submit exam results.')
+    }
   }
 
   return (

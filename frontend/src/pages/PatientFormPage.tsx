@@ -43,7 +43,7 @@ export default function PatientFormPage() {
       getPatient(id!).then((patient) => {
         setForm({
           fullName: patient.fullName,
-          dateOfBirth: patient.dateOfBirth.split('T')[0],
+          dateOfBirth: patient.dateOfBirth ? patient.dateOfBirth.split('T')[0] : '',
           gender: patient.gender,
           phoneNumber: patient.phoneNumber,
           email: patient.email ?? '',

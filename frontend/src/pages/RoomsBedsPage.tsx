@@ -156,7 +156,9 @@ export default function RoomsBedsPage() {
           </div>
           <div>
             <p className="text-xs text-slate-500 font-semibold">Occupancy Rate</p>
-            <p className="text-xl font-extrabold text-teal-700 dark:text-teal-400">{occupancyRate}%</p>
+            <p className="text-xl font-extrabold text-teal-700 dark:text-teal-400">
+              {occupancyRate}% <span className="text-xs font-normal text-slate-400">({maintenanceBeds} Maint.)</span>
+            </p>
           </div>
         </div>
       </div>
@@ -290,6 +292,11 @@ export default function RoomsBedsPage() {
                 Register New Bed Unit
               </h2>
               <form onSubmit={handleCreateBed} className="space-y-4">
+                {error && (
+                  <div className="p-3 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 text-xs rounded-xl">
+                    {error}
+                  </div>
+                )}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">

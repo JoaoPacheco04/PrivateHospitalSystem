@@ -143,7 +143,7 @@ export default function MedicationsPage() {
               </div>
             )}
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
               <div>
                 <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">
                   Medication Name *
@@ -197,6 +197,18 @@ export default function MedicationsPage() {
                   placeholder="LOT-2026-A1"
                   value={batchNumber}
                   onChange={(e) => setBatchNumber(e.target.value)}
+                  className="app-input font-mono"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">
+                  Expiry Date
+                </label>
+                <input
+                  type="date"
+                  value={expiryDate}
+                  onChange={(e) => setExpiryDate(e.target.value)}
                   className="app-input font-mono"
                 />
               </div>

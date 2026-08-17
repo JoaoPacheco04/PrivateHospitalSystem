@@ -18,7 +18,7 @@ export default function InactivityLockModal() {
       return
     }
 
-    let timer: NodeJS.Timeout
+    let timer: ReturnType<typeof setTimeout>
 
     const resetTimer = () => {
       if (isLocked) return

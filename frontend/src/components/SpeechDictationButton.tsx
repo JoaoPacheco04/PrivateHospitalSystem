@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useLanguageStore } from '../store/languageStore'
 import { toast } from '../store/toastStore'
 

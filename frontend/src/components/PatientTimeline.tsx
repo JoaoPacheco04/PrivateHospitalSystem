@@ -33,7 +33,7 @@ export default function PatientTimeline({ patientId }: { patientId: string }) {
   })
 
   const items: TimelineItem[] = [
-    ...(appts ?? []).map((a) => ({
+    ...(appts?.filter((a) => a.patientId === patientId) ?? []).map((a) => ({
       id: `appt-${a.id}`,
       date: new Date(a.scheduledAt),
       type: 'appointment' as const,

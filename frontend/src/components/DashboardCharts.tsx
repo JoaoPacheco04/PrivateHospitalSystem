@@ -89,7 +89,6 @@ export function TriageDistributionDonut({
 
   const redPct = Math.round((red / safeTotal) * 100)
   const orangePct = Math.round((orange / safeTotal) * 100)
-  const yellowPct = Math.max(0, 100 - redPct - orangePct)
 
   return (
     <div className="app-card p-6 space-y-4">
@@ -114,15 +113,30 @@ export function TriageDistributionDonut({
               d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
             />
             {/* Red segment */}
-            <path
-              className="text-rose-500"
-              strokeDasharray={`${redPct}, 100`}
-              strokeWidth="4.5"
-              strokeLinecap="round"
-              stroke="currentColor"
-              fill="none"
-              d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-            />
+            {redPct > 0 && (
+              <path
+                className="text-rose-500"
+                strokeDasharray={`${redPct}, 100`}
+                strokeWidth="4.5"
+                strokeLinecap="round"
+                stroke="currentColor"
+                fill="none"
+                d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+              />
+            )}
+            {/* Orange segment */}
+            {orangePct > 0 && (
+              <path
+                className="text-orange-500"
+                strokeDasharray={`${orangePct}, 100`}
+                strokeDashoffset={`-${redPct}`}
+                strokeWidth="4.5"
+                strokeLinecap="round"
+                stroke="currentColor"
+                fill="none"
+                d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+              />
+            )}
           </svg>
           <div className="absolute inset-0 flex flex-col items-center justify-center">
             <span className="text-xl font-extrabold text-slate-900 dark:text-white">{total}</span>

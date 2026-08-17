@@ -4,7 +4,6 @@ import { Link } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
 import { getMyProfile } from '../api/patients'
 import { getPrescriptionsByPatient } from '../api/prescriptions'
-import { getInvoicesByPatient } from '../api/invoices'
 import { getAppointments } from '../api/appointments'
 import PatientTimeline from '../components/PatientTimeline'
 import VitalSignsModal, { type VitalSignRecord } from '../components/VitalSignsModal'
@@ -54,12 +53,6 @@ export default function MyProfilePage() {
   const { data: prescriptions } = useQuery({
     queryKey: ['prescriptions-patient', patientId],
     queryFn: () => getPrescriptionsByPatient(patientId!),
-    enabled: !!patientId,
-  })
-
-  const { data: invoices } = useQuery({
-    queryKey: ['invoices-patient', patientId],
-    queryFn: () => getInvoicesByPatient(patientId!),
     enabled: !!patientId,
   })
 
@@ -265,14 +258,19 @@ export default function MyProfilePage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             <InfoItem label="Full Legal Name" value={profile?.fullName} />
             <InfoItem label="National Healthcare #" value={profile?.patientNumber} />
+            <InfoItem label="Health User Number (SNS)" value={profile?.healthNumber} />
+            <InfoItem label="Tax ID (NIF)" value={profile?.nif} />
             <InfoItem label="Email Address" value={profile?.email} />
             <InfoItem label="Phone Number" value={profile?.phoneNumber} />
             <InfoItem label="Birth Date" value={profile?.dateOfBirth ? new Date(profile.dateOfBirth).toLocaleDateString('en-GB') : null} />
             <InfoItem label="Gender" value={profile?.gender} />
-            <InfoItem label="Blood Type" value={profile?.bloodType} />
             <InfoItem label="Insurance Provider" value={profile?.insuranceProviderName || 'None / Private Pay'} />
-            <InfoItem label="Policy / Card #" value={profile?.insurancePolicyNumber} />
-            <InfoItem label="Emergency Contact" value={profile?.emergencyContact} />
+            <InfoItem label="Policy / Card #" value={profile?.policyNumber} />
+            <InfoItem
+              label="Emergency Contact"
+              value={profile?.emergencyContactName ? `${profile.emergencyContactName}${profile.emergencyContactPhone ? ` (${profile.emergencyContactPhone})` : ''}` : null}
+            />
+            <InfoItem label="Known Allergies" value={profile?.allergies || 'None recorded'} />
           </div>
         </div>
       )}

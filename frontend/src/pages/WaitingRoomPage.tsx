@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { getAppointments } from '../api/appointments'
 import { getEmergencyQueue } from '../api/emergencyCases'
-import { useLanguageStore } from '../store/languageStore'
 
 // Web Audio API Synthesized Hospital Chime (Ding-Dong)
 function playHospitalChime() {
@@ -40,7 +39,6 @@ function playHospitalChime() {
 }
 
 export default function WaitingRoomPage() {
-  const t = useLanguageStore((s) => s.t)
   const [currentTime, setCurrentTime] = useState(new Date())
   const [calledTicket, setCalledTicket] = useState<{
     ticketNumber: string

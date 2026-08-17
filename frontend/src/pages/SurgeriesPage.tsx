@@ -252,7 +252,6 @@ export default function SurgeriesPage() {
                       <td className="table-cell font-bold text-slate-900">{surg.procedureName}</td>
                       <td className="table-cell">
                         <p className="font-bold text-slate-800 text-sm leading-tight">{surg.patientName}</p>
-                        <p className="text-xs text-slate-400 font-mono">Patient #{surg.patientNumber}</p>
                       </td>
                       <td className="table-cell font-mono text-xs font-semibold text-slate-700">
                         Room {surg.roomNumber}
@@ -263,11 +262,11 @@ export default function SurgeriesPage() {
                       </td>
                       <td className="table-cell text-slate-700 font-medium">{surg.durationMinutes} mins</td>
                       <td className="table-cell">
-                        {surg.teamMembers && surg.teamMembers.length > 0 ? (
+                        {surg.team && surg.team.length > 0 ? (
                           <div className="flex flex-col gap-1">
-                            {surg.teamMembers.map((tm, idx) => (
+                            {surg.team.map((member: string, idx: number) => (
                               <span key={idx} className="text-xs text-slate-700">
-                                <strong className="text-slate-900">Dr. {tm.doctorName}</strong> ({tm.role})
+                                👨‍⚕️ <strong className="text-slate-900">{member}</strong>
                               </span>
                             ))}
                           </div>

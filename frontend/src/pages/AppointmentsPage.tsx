@@ -48,6 +48,7 @@ export default function AppointmentsPage() {
   }
 
   const filtered = appointments?.filter((a) => {
+    const matchesPatient = !isPatient || !patientId || a.patientId === patientId
     const matchesStatus = filterStatus === 'ALL' || a.status === filterStatus
     const matchesSearch =
       a.patientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -68,7 +69,7 @@ export default function AppointmentsPage() {
       matchesDate = apptDate.getMonth() === now.getMonth() && apptDate.getFullYear() === now.getFullYear()
     }
 
-    return matchesStatus && matchesSearch && matchesDate
+    return matchesPatient && matchesStatus && matchesSearch && matchesDate
   })
 
   // Group appointments by date for Calendar view
